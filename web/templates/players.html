@@ -1,0 +1,100 @@
+{% extends "base.html" %}
+
+{% block title %}IPL Players Roster{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <h1>IPL Registered Players Roster</h1>
+        <p class="subtitle">Showing {{ players|length }} player(s) with career stats</p>
+    </div>
+    <div>
+        <a href="/player/add" class="btn btn-primary">+ Add New Player</a>
+    </div>
+</div>
+
+<!-- Filters & Search Toolbar -->
+<div class="toolbar-card">
+    <div class="role-filter-buttons">
+        <a href="/players" class="filter-btn {% if not active_role and not search_query %}active{% endif %}">All Players</a>
+        <a href="/players?role=Bowler" class="filter-btn {% if active_role == 'Bowler' %}active{% endif %}">⚡ Bowlers Only (Boss Q2)</a>
+        <a href="/players?role=Batsman" class="filter-btn {% if active_role == 'Batsman' %}active{% endif %}">🏏 Batsmen</a>
+        <a href="/players?role=Allrounder" class="filter-btn {% if active_role == 'Allrounder' %}active{% endif %}">🔥 Allrounders</a>
+        <a href="/players?role=Wicketkeeper" class="filter-btn {% if active_role == 'Wicketkeeper' %}active{% endif %}">🧤 Wicketkeepers</a>
+    </div>
+
+    <!-- Search Form (Boss Q3) -->
+    <form action="/players" method="GET" class="search-form">
+        <input 
+            type="text" 
+            name="q" 
+            placeholder="Find Virat Kohli or any player..." 
+            value="{{ search_query }}"
+            class="search-input"
+        >
+        <button type="submit" class="btn btn-secondary">🔍 Search</button>
+        {% if search_query or active_role %}
+            <a href="/players" class="btn btn-outline">Clear</a>
+        {% endif %}
+    </form>
+</div>
+
+<!-- Players Data Table -->
+<div class="card mt-3">
+    <div class="table-responsive">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Player Name</th>
+                    <th>Role</th>
+                    <th>Country</th>
+                    <th class="text-right">Base Price</th>
+                    <th class="text-center">Status</th>
+                    <th class="text-center">Team</th>
+                    <th class="text-right">Matches</th>
+                    <th class="text-right">Runs</th>
+                    <th class="text-right">Bat Avg</th>
+                    <th class="text-right">SR</th>
+                    <th class="text-right">Wickets</th>
+                    <th class="text-right">Economy</th>
+                    <th class="text-center">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for p in players %}
+                <tr>
+                    <td class="text-dim">#{{ p.player_id }}</td>
+                    <td>
+                        <a href="/player/{{ p.player_id }}" class="player-link font-bold">{{ p.name }}</a>
+                    </td>
+                    <td><span class="badge badge-role role-{{ p.role|lower }}">{{ p.role }}</span></td>
+                    <td>{{ p.country }}</td>
+                    <td class="text-right">{{ format_currency(p.base_price) }}</td>
+                    <td class="text-center">
+                        <span class="badge badge-status status-{{ p.status|lower }}">{{ p.status }}</span>
+                    </td>
+                    <td class="text-center font-bold color-gold">{{ p.team_code or '-' }}</td>
+                    <td class="text-right">{{ p.matches }}</td>
+                    <td class="text-right font-bold color-gold">{{ "{:,}".format(p.runs) }}</td>
+                    <td class="text-right">{{ "%.2f"|format(p.batting_avg) }}</td>
+                    <td class="text-right">{{ "%.2f"|format(p.strike_rate) }}</td>
+                    <td class="text-right font-bold color-red">{{ p.wickets }}</td>
+                    <td class="text-right">{{ "%.2f"|format(p.bowling_economy) }}</td>
+                    <td class="text-center actions-cell">
+                        <a href="/player/{{ p.player_id }}/edit" class="btn-icon edit-icon" title="Update Statistics">✏️</a>
+                        <form action="/player/{{ p.player_id }}/delete" method="POST" style="display:inline;" onsubmit="return confirm('Delete {{ p.name }}?');">
+                            <button type="submit" class="btn-icon delete-icon" title="Delete Player">🗑️</button>
+                        </form>
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="14" class="text-center py-4">No players found matching the query.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

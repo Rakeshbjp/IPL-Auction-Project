@@ -1,0 +1,93 @@
+{% extends "base.html" %}
+
+{% block title %}Franchise Squads & Budgets - Boss Q9 & Q10{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <h1>Franchise Squads & Purse Management</h1>
+        <p class="subtitle">Answering Boss Question 9 (Purchased Players) & Question 10 (Remaining Team Budget)</p>
+    </div>
+</div>
+
+<!-- Team Selector Buttons -->
+<div class="team-pills-container">
+    {% for t in teams %}
+    <a href="/teams?team={{ t.short_code }}" class="team-pill {% if t.short_code == selected_code %}active{% endif %}">
+        <span class="pill-code">{{ t.short_code }}</span>
+        <span class="pill-name">{{ t.team_name }}</span>
+    </a>
+    {% endfor %}
+</div>
+
+<!-- Selected Franchise Overview (Boss Q10 & Q9) -->
+{% set team = squad_data.team %}
+{% if team %}
+<div class="card mt-4 franchise-card">
+    <div class="franchise-header">
+        <div>
+            <h2>{{ team.team_name }} ({{ team.short_code }})</h2>
+            <p class="text-dim">Franchise ID #{{ team.team_id }} • Official IPL 2026 Roster</p>
+        </div>
+        <div class="franchise-purse-badges">
+            <div class="purse-badge">
+                <span class="badge-label">Initial Purse</span>
+                <span class="badge-val">{{ format_currency(team.total_budget) }}</span>
+            </div>
+            <div class="purse-badge">
+                <span class="badge-label">Spent in Auction</span>
+                <span class="badge-val color-red">{{ squad_data.total_spent_fmt }}</span>
+            </div>
+            <div class="purse-badge">
+                <span class="badge-label">Remaining Budget (Boss Q10)</span>
+                <span class="badge-val color-green">{{ squad_data.remaining_budget_fmt }}</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Purchased Players Table (Boss Q9) -->
+    <div class="squad-section mt-4">
+        <h3>Purchased Players ({{ squad_data.players|length }} / {{ team.max_squad_size }})</h3>
+        {% if squad_data.players %}
+        <div class="table-responsive mt-2">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Player Name</th>
+                        <th>Role</th>
+                        <th>Country</th>
+                        <th class="text-right">Base Price</th>
+                        <th class="text-right">Sold Price</th>
+                        <th class="text-right">Runs</th>
+                        <th class="text-right">Bat Avg</th>
+                        <th class="text-right">Wickets</th>
+                        <th class="text-right">Economy</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for p in squad_data.players %}
+                    <tr>
+                        <td><a href="/player/{{ p.player_id }}" class="player-link font-bold">{{ p.name }}</a></td>
+                        <td><span class="badge badge-role">{{ p.role }}</span></td>
+                        <td>{{ p.country }}</td>
+                        <td class="text-right">{{ format_currency(p.base_price) }}</td>
+                        <td class="text-right font-bold color-gold">{{ format_currency(p.sold_price) }}</td>
+                        <td class="text-right">{{ p.runs }}</td>
+                        <td class="text-right">{{ "%.2f"|format(p.batting_avg) }}</td>
+                        <td class="text-right color-red">{{ p.wickets }}</td>
+                        <td class="text-right">{{ "%.2f"|format(p.bowling_economy) }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="empty-state">
+            <p>🏏 {{ team.team_name }} has not purchased any players yet in this auction session.</p>
+            <a href="/auction" class="btn btn-primary mt-2">🔨 Go to Auction Room & Place Bids</a>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endif %}
+{% endblock %}

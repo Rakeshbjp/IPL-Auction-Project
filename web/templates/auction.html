@@ -1,0 +1,403 @@
+{% extends "base.html" %}
+
+{% block title %}TATA IPL 2026 Mega Auction Arena{% endblock %}
+
+{% block content %}
+<div class="auction-arena-wrapper">
+    <!-- TOP STAGE HEADER WITH TROPHY & STAGE STATS (Matching Image 4) -->
+    <div class="arena-stage-header">
+        <div class="stage-branding">
+            <div class="trophy-emblem">🏆</div>
+            <div>
+                <h1 class="arena-title">TATA IPL 2026 MEGA AUCTION ARENA</h1>
+                <p class="arena-sub">Official Broadcast Stage • Mallika Sagar at the Podium</p>
+            </div>
+        </div>
+
+        <div class="arena-stats-strip">
+            <div class="strip-pill">
+                <span class="pill-label">Players Sold</span>
+                <span class="pill-val color-green" id="stat-sold-count">{{ stats.sold }}</span>
+            </div>
+            <div class="strip-pill">
+                <span class="pill-label">Available Pool</span>
+                <span class="pill-val color-blue" id="stat-pool-count">{{ pool|length }}</span>
+            </div>
+            <div class="strip-pill">
+                <span class="pill-label">Total Spend</span>
+                <span class="pill-val color-gold" id="stat-spent-val">{{ stats.total_spent_fmt }}</span>
+            </div>
+            <form action="/api/auction/reset" method="POST" onsubmit="return confirm('Reset all teams back to ₹120 Cr and restore player pool?');" style="display:inline;">
+                <button type="submit" class="btn btn-xs btn-outline">🔄 Reset Auction</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- MAIN ARENA STAGE (Matching Image 2: 3D Drone Pod & Image 4: Auctioneer Board) -->
+    <div class="arena-center-stage">
+        {% if pool %}
+        {% set p = pool[0] %}
+        <!-- 3D HIGH-TECH GOLDEN DRONE POD (Matching Image 2) -->
+        <div class="drone-pod-container" id="drone-pod">
+            <!-- Top Golden Ring Thruster -->
+            <div class="pod-thrusters-top">
+                <div class="thruster-ring ring-1"></div>
+                <div class="thruster-ring ring-2"></div>
+            </div>
+
+            <!-- The Main Holographic Box -->
+            <div class="pod-screen-box">
+                <div class="pod-frame-gold">
+                    <div class="pod-inner-hologram">
+                        <!-- Hologram Header -->
+                        <div class="pod-tagline">TATA IPL AUCTION 2026 • SET 1 MARQUEE</div>
+                        
+                        <!-- Player Photo & Avatar -->
+                        <div class="player-avatar-circle">
+                            <div class="avatar-cricketer-silhouette">🏏</div>
+                        </div>
+
+                        <!-- Player Name Glowing Banner -->
+                        <h2 class="pod-player-name" id="pod-name">{{ p.name|upper }}</h2>
+                        <div class="pod-player-meta">
+                            <span class="meta-role" id="pod-role">{{ p.role|upper }}</span>
+                            <span class="meta-dot">•</span>
+                            <span class="meta-country" id="pod-country">{{ p.country|upper }}</span>
+                        </div>
+
+                        <!-- Career Stats Ticker -->
+                        <div class="pod-stats-ticker">
+                            <div class="ticker-box"><span>MATCHES</span><strong id="pod-matches">{{ p.matches }}</strong></div>
+                            <div class="ticker-box"><span>RUNS</span><strong id="pod-runs" class="color-gold">{{ "{:,}".format(p.runs) }}</strong></div>
+                            <div class="ticker-box"><span>BAT AVG</span><strong id="pod-avg">{{ "%.2f"|format(p.batting_avg) }}</strong></div>
+                            <div class="ticker-box"><span>SR</span><strong id="pod-sr">{{ "%.2f"|format(p.strike_rate) }}</strong></div>
+                            <div class="ticker-box"><span>WICKETS</span><strong id="pod-wickets" class="color-red">{{ p.wickets }}</strong></div>
+                        </div>
+
+                        <!-- Base Price Tag (Matching Image 4) -->
+                        <div class="pod-base-price-tag">
+                            <span class="tag-title">BASE PRICE</span>
+                            <span class="tag-amount" id="pod-base-price">{{ format_currency(p.base_price) }}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Bottom Thruster Base -->
+            <div class="pod-thrusters-bottom">
+                <div class="thruster-glow"></div>
+            </div>
+        </div>
+
+        <!-- LIVE BIDDING STATUS & AUCTIONEER GAVEL CONSOLE (Matching Image 4) -->
+        <div class="auctioneer-broadcast-panel">
+            <div class="current-bid-display">
+                <span class="bid-header-label">CURRENT HIGHEST BID</span>
+                <div class="bid-hero-number" id="current-bid-amount">{{ format_currency(p.base_price) }}</div>
+                <div class="bid-holding-team" id="current-bidder-box">
+                    <span class="held-by-text">HELD BY:</span>
+                    <span class="held-by-badge" id="current-bidder-badge">STARTING AT BASE PRICE</span>
+                </div>
+            </div>
+
+            <!-- Gavel Call Status Banner -->
+            <div class="gavel-call-banner" id="gavel-status-box">
+                <span class="hammer-icon">🔨</span>
+                <span class="gavel-text" id="gavel-call-text">Mallika Sagar: "We are at {{ format_currency(p.base_price) }}. Looking for opening paddles!"</span>
+            </div>
+
+            <!-- Interactive Stage Action Buttons -->
+            <div class="arena-action-buttons mt-3">
+                <button type="button" id="btn-next-ai-bid" class="btn btn-gold btn-lg">
+                    ⚡ Trigger AI Paddle Raise (+Slab)
+                </button>
+                <button type="button" id="btn-hammer-knockdown" class="btn btn-hammer btn-lg">
+                    🔨 Bang Gavel & Finalize Sale
+                </button>
+                <button type="button" id="btn-auto-simulate" class="btn btn-primary btn-lg">
+                    ⏩ Fast-Forward Player Battle
+                </button>
+                <button type="button" id="btn-pass-unsold" class="btn btn-outline btn-lg">
+                    ❌ Pass as UNSOLD
+                </button>
+            </div>
+        </div>
+        {% else %}
+        <div class="empty-arena-card">
+            <div class="trophy-huge">🏆</div>
+            <h2>IPL 2026 MEGA AUCTION COMPLETED!</h2>
+            <p>All marquee players have gone under the hammer. Review the completed squads and purse details.</p>
+            <div class="mt-4">
+                <a href="/teams" class="btn btn-primary btn-lg">Inspect Team Squads & Spending →</a>
+                <a href="/" class="btn btn-outline btn-lg">View Analytics Dashboard</a>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- 10 FRANCHISE BIDDING DESKS IN ARENA (Matching Image 2 Arena Floor) -->
+    <div class="franchise-tables-arena mt-5">
+        <div class="arena-section-title">
+            <h3>🏢 FRANCHISE BIDDING DESKS (10 OFFICIAL TEAMS)</h3>
+            <span class="section-sub">Click "Raise Paddle" on any franchise to bid on their behalf in real time!</span>
+        </div>
+
+        <div class="franchise-tables-grid">
+            {% for t in teams %}
+            <div class="franchise-table-card" id="desk-{{ t.short_code }}" data-desk-code="{{ t.short_code }}">
+                <div class="table-top-bar team-bg-{{ t.short_code|lower }}">
+                    <span class="desk-code">{{ t.short_code }}</span>
+                    <span class="desk-name">{{ t.team_name }}</span>
+                </div>
+                <div class="table-body">
+                    <div class="desk-metric-row">
+                        <span class="desk-label">Purse Left:</span>
+                        <strong class="desk-purse color-green" id="purse-{{ t.team_id }}">{{ t.remaining_budget_fmt }}</strong>
+                    </div>
+                    <div class="desk-metric-row">
+                        <span class="desk-label">Squad:</span>
+                        <span class="desk-squad">{{ t.current_squad_size }} / {{ t.max_squad_size }}</span>
+                    </div>
+
+                    <!-- Interactive Paddle Button -->
+                    <button type="button" 
+                            class="btn-paddle mt-2" 
+                            data-team-id="{{ t.team_id }}" 
+                            data-team-code="{{ t.short_code }}" 
+                            data-team-name="{{ t.team_name }}"
+                            data-purse="{{ t.remaining_budget }}">
+                        ✋ RAISE {{ t.short_code }} PADDLE
+                    </button>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+<!-- Safe JSON Payloads for Live Auction Engine -->
+<script type="application/json" id="data-pool-json">{{ pool_json|safe if pool else '[]' }}</script>
+<script type="application/json" id="data-teams-json">{{ teams_json|safe }}</script>
+
+<script>
+const POOL = JSON.parse(document.getElementById('data-pool-json').textContent);
+const TEAMS = JSON.parse(document.getElementById('data-teams-json').textContent);
+
+let currentPoolIndex = 0;
+let currentBidAmount = POOL.length ? parseFloat(POOL[0].base_price) : 0;
+let currentWinningTeam = null;
+let isAuctionActive = POOL.length > 0;
+
+// Web Audio API Sound Synthesizer for Gavel Knockdown & Bidding Chimes
+const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+function playPaddleChime() {
+    if (audioCtx.state === 'suspended') audioCtx.resume();
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(587.33, audioCtx.currentTime); // D5
+    osc.frequency.exponentialRampToValueAtTime(880, audioCtx.currentTime + 0.15); // A5
+    gain.gain.setValueAtTime(0.25, audioCtx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.25);
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
+    osc.start();
+    osc.stop(audioCtx.currentTime + 0.25);
+}
+
+function playGavelStrikeSound() {
+    if (audioCtx.state === 'suspended') audioCtx.resume();
+    // Low frequency thud
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.type = 'triangle';
+    osc.frequency.setValueAtTime(120, audioCtx.currentTime);
+    osc.frequency.exponentialRampToValueAtTime(30, audioCtx.currentTime + 0.3);
+    gain.gain.setValueAtTime(0.8, audioCtx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.35);
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
+    osc.start();
+    osc.stop(audioCtx.currentTime + 0.35);
+}
+
+function formatINR(amount) {
+    if (amount >= 10000000) return '₹' + (amount / 10000000).toFixed(2) + ' Cr';
+    if (amount >= 100000) return '₹' + (amount / 100000).toFixed(2) + ' L';
+    return '₹' + amount.toLocaleString();
+}
+
+function getBidIncrement(bid) {
+    if (bid < 10000000) return 1000000;       // 10 L
+    if (bid < 20000000) return 2000000;       // 20 L
+    if (bid < 50000000) return 2500000;       // 25 L
+    if (bid < 100000000) return 5000000;      // 50 L
+    return 10000000;                          // 1 Cr
+}
+
+// Paddle Click Handler
+document.querySelectorAll('.btn-paddle').forEach(btn => {
+    btn.addEventListener('click', function() {
+        if (!isAuctionActive || !POOL.length) return;
+
+        const teamId = parseInt(this.dataset.teamId);
+        const teamCode = this.dataset.teamCode;
+        const teamName = this.dataset.teamName;
+        const teamPurse = parseFloat(this.dataset.purse);
+
+        const inc = getBidIncrement(currentBidAmount);
+        const nextBid = currentBidAmount + inc;
+
+        if (teamPurse < nextBid) {
+            alert(`${teamName} cannot bid! Remaining purse is only ${formatINR(teamPurse)}.`);
+            return;
+        }
+
+        // Place Bid
+        currentBidAmount = nextBid;
+        currentWinningTeam = { team_id: teamId, short_code: teamCode, team_name: teamName };
+
+        // Visual Table Glow
+        highlightTeamDesk(teamCode);
+        playPaddleChime();
+
+        // Update Display
+        document.getElementById('current-bid-amount').innerText = formatINR(currentBidAmount);
+        document.getElementById('current-bidder-badge').innerText = `${teamName} (${teamCode})`;
+        document.getElementById('gavel-call-text').innerHTML = `<strong>${teamName}</strong> raises paddle to <strong>${formatINR(currentBidAmount)}</strong>!`;
+    });
+});
+
+function highlightTeamDesk(code) {
+    document.querySelectorAll('.franchise-table-card').forEach(c => c.classList.remove('active-bidder'));
+    const desk = document.getElementById(`desk-${code}`);
+    if (desk) {
+        desk.classList.add('active-bidder');
+        setTimeout(() => desk.classList.remove('active-bidder'), 2500);
+    }
+}
+
+// Trigger AI Bid
+document.getElementById('btn-next-ai-bid')?.addEventListener('click', function() {
+    if (!isAuctionActive || !POOL.length) return;
+
+    const inc = getBidIncrement(currentBidAmount);
+    const nextBid = currentBidAmount + inc;
+
+    // Pick random eligible team other than current
+    const eligible = TEAMS.filter(t => t.remaining_budget >= nextBid && (!currentWinningTeam || t.team_id !== currentWinningTeam.team_id));
+    if (!eligible.length) {
+        alert('No other franchise can afford to raise the bid!');
+        return;
+    }
+
+    const bidder = eligible[Math.floor(Math.random() * eligible.length)];
+    currentBidAmount = nextBid;
+    currentWinningTeam = { team_id: bidder.team_id, short_code: bidder.short_code, team_name: bidder.team_name };
+
+    highlightTeamDesk(bidder.short_code);
+    playPaddleChime();
+
+    document.getElementById('current-bid-amount').innerText = formatINR(currentBidAmount);
+    document.getElementById('current-bidder-badge').innerText = `${bidder.team_name} (${bidder.short_code})`;
+    document.getElementById('gavel-call-text').innerHTML = `✋ <strong>${bidder.team_name}</strong> paddle raised at <strong>${formatINR(currentBidAmount)}</strong>!`;
+});
+
+// Hammer Knockdown & Finalize Sale
+document.getElementById('btn-hammer-knockdown')?.addEventListener('click', async function() {
+    if (!isAuctionActive || !POOL.length) return;
+    const btn = this;
+    btn.disabled = true;
+
+    const player = POOL[0];
+    const statusBox = document.getElementById('gavel-call-text');
+
+    if (!currentWinningTeam) {
+        alert('Please place at least one paddle raise before hammering down!');
+        btn.disabled = false;
+        return;
+    }
+
+    // Mallika Sagar Gavel Countdown
+    statusBox.innerHTML = `🔨 "Going once at ${formatINR(currentBidAmount)}..."`;
+    playGavelStrikeSound();
+
+    await new Promise(r => setTimeout(r, 700));
+    statusBox.innerHTML = `🔨 "Going twice at ${formatINR(currentBidAmount)}..."`;
+    playGavelStrikeSound();
+
+    await new Promise(r => setTimeout(r, 700));
+    playGavelStrikeSound();
+
+    // Trigger Golden Confetti Explosion
+    confetti({
+        particleCount: 150,
+        spread: 90,
+        origin: { y: 0.6 },
+        colors: ['#FDB913', '#EC1C24', '#004BA0', '#10b981']
+    });
+
+    statusBox.innerHTML = `🎉 <strong>SOLD!</strong> ${player.name} is SOLD to <strong>${currentWinningTeam.team_name}</strong> for <strong>${formatINR(currentBidAmount)}</strong>!`;
+
+    // Persist to Database via API
+    try {
+        await fetch('/api/auction/record_manual_bid', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                player_id: player.player_id,
+                team_id: currentWinningTeam.team_id,
+                sold_price: currentBidAmount
+            })
+        });
+
+        setTimeout(() => { window.location.reload(); }, 2200);
+    } catch (err) {
+        alert('Error saving bid: ' + err);
+        btn.disabled = false;
+    }
+});
+
+// Pass as UNSOLD
+document.getElementById('btn-pass-unsold')?.addEventListener('click', async function() {
+    if (!isAuctionActive || !POOL.length) return;
+    if (!confirm('Mark this player as UNSOLD?')) return;
+
+    const player = POOL[0];
+    playGavelStrikeSound();
+    document.getElementById('gavel-call-text').innerHTML = `❌ <strong>UNSOLD!</strong> No bids received for ${player.name}.`;
+
+    try {
+        await fetch('/api/auction/record_manual_bid', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                player_id: player.player_id,
+                unsold: true
+            })
+        });
+        setTimeout(() => { window.location.reload(); }, 1500);
+    } catch (err) {
+        window.location.reload();
+    }
+});
+
+// Fast Forward Auto Simulation
+document.getElementById('btn-auto-simulate')?.addEventListener('click', async function() {
+    if (!isAuctionActive || !POOL.length) return;
+    this.disabled = true;
+    this.innerText = 'Simulating full auction battle...';
+
+    const res = await fetch('/api/auction/simulate_next', { method: 'POST' });
+    const data = await res.json();
+
+    if (data.success) {
+        playGavelStrikeSound();
+        confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } });
+        document.getElementById('gavel-call-text').innerHTML = `🎉 <strong>SOLD:</strong> ${data.player_name} to <strong>${data.winning_team}</strong> for <strong>${data.sold_price_fmt}</strong>!`;
+        setTimeout(() => { window.location.reload(); }, 1800);
+    }
+});
+</script>
+{% endblock %}

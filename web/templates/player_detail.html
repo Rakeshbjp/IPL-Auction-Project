@@ -1,0 +1,94 @@
+{% extends "base.html" %}
+
+{% block title %}{{ player.name }} - Player Profile{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <a href="/players" class="back-link">← Back to Players Roster</a>
+        <h1>{{ player.name }}</h1>
+        <p class="subtitle">{{ player.role }} • {{ player.country }} • ID #{{ player.player_id }}</p>
+    </div>
+    <div class="header-actions">
+        <a href="/player/{{ player.player_id }}/edit" class="btn btn-secondary">✏️ Update Statistics</a>
+        <form action="/player/{{ player.player_id }}/delete" method="POST" style="display:inline;" onsubmit="return confirm('Delete this player?');">
+            <button type="submit" class="btn btn-danger">🗑️ Delete Player</button>
+        </form>
+    </div>
+</div>
+
+<div class="profile-grid">
+    <!-- Status & Valuation Card -->
+    <div class="card profile-summary-card">
+        <h3>Auction & Franchise Status</h3>
+        <div class="summary-rows">
+            <div class="summary-row">
+                <span class="label">Auction Status:</span>
+                <span class="badge badge-status status-{{ player.status|lower }}">{{ player.status }}</span>
+            </div>
+            <div class="summary-row">
+                <span class="label">Franchise Team:</span>
+                <span class="value font-bold color-gold">{{ player.team_name or 'Available in Pool' }}</span>
+            </div>
+            <div class="summary-row">
+                <span class="label">Base Price:</span>
+                <span class="value">{{ format_currency(player.base_price) }}</span>
+            </div>
+            <div class="summary-row">
+                <span class="label">Sold Price:</span>
+                <span class="value font-bold color-green">{{ format_currency(player.sold_price) }}</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Batting Statistics Card -->
+    <div class="card">
+        <h3>🏏 Batting Career Statistics</h3>
+        <div class="stats-grid">
+            <div class="stat-box">
+                <span class="stat-number">{{ player.matches }}</span>
+                <span class="stat-name">Matches</span>
+            </div>
+            <div class="stat-box">
+                <span class="stat-number color-gold">{{ "{:,}".format(player.runs) }}</span>
+                <span class="stat-name">Total Runs</span>
+            </div>
+            <div class="stat-box">
+                <span class="stat-number">{{ player.highest_score }}</span>
+                <span class="stat-name">Highest Score</span>
+            </div>
+            <div class="stat-box">
+                <span class="stat-number color-blue">{{ "%.2f"|format(player.batting_avg) }}</span>
+                <span class="stat-name">Batting Average</span>
+            </div>
+            <div class="stat-box">
+                <span class="stat-number">{{ "%.2f"|format(player.strike_rate) }}</span>
+                <span class="stat-name">Strike Rate</span>
+            </div>
+            <div class="stat-box">
+                <span class="stat-number">{{ player.centuries }} / {{ player.fifties }}</span>
+                <span class="stat-name">100s / 50s</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bowling Statistics Card -->
+    <div class="card">
+        <h3>⚡ Bowling Career Statistics</h3>
+        <div class="stats-grid">
+            <div class="stat-box">
+                <span class="stat-number color-red">{{ player.wickets }}</span>
+                <span class="stat-name">Total Wickets</span>
+            </div>
+            <div class="stat-box">
+                <span class="stat-number">{{ "%.2f"|format(player.bowling_economy) }}</span>
+                <span class="stat-name">Economy Rate</span>
+            </div>
+            <div class="stat-box">
+                <span class="stat-number">{{ "%.2f"|format(player.bowling_avg) }}</span>
+                <span class="stat-name">Bowling Average</span>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}IPL Mega Auction & Analytics{% endblock %}</title>
+    <!-- Modern Sports Typography -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700;900&family=Inter:wght@400;500;600;700;800;900&family=Orbitron:wght@700;900&family=Rajdhani:wght@600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- Chart.js for High-Impact Analytics -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Canvas Confetti for SOLD Celebrations -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
+
+    <!-- Custom Broadcast Stylesheet -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body class="broadcast-theme">
+    <!-- Top Broadcast Ticker -->
+    <div class="top-broadcast-ticker">
+        <div class="ticker-inner">
+            <span class="ticker-live-badge"><span class="live-dot"></span> LIVE BROADCAST</span>
+            <span class="ticker-item">🏏 TATA IPL MEGA AUCTION 2026 ARENA</span>
+            <span class="ticker-item">💰 SQUAD PURSE: ₹120.00 CR PER FRANCHISE</span>
+            <span class="ticker-item">⚡ 10 FRANCHISES: CSK • MI • RCB • KKR • SRH • RR • GT • LSG • DC • PBKS</span>
+        </div>
+    </div>
+
+    <header class="navbar">
+        <div class="nav-container">
+            <a href="/" class="logo">
+                <div class="ipl-logo-emblem">IPL</div>
+                <div class="logo-titles">
+                    <span class="logo-sub">TATA IPL 2026</span>
+                    <span class="logo-main">AUCTION & ANALYTICS</span>
+                </div>
+            </a>
+            <nav class="nav-links">
+                <a href="/" class="nav-item {% if request.path == '/' %}active{% endif %}">📊 Batting & Team Analytics</a>
+                <a href="/players" class="nav-item {% if request.path == '/players' %}active{% endif %}">👥 All Players</a>
+                <a href="/players?role=Bowler" class="nav-item">⚡ Bowlers</a>
+                <a href="/players?role=Batsman" class="nav-item">🏏 Batsmen</a>
+                <a href="/players?role=Allrounder" class="nav-item">🔥 Allrounders</a>
+                <a href="/teams" class="nav-item {% if request.path == '/teams' %}active{% endif %}">🏆 Franchises & Purse</a>
+                <a href="/auction" class="btn-auction-nav {% if request.path == '/auction' %}active-auction{% endif %}">🔨 MEGA AUCTION ARENA</a>
+                <a href="/player/add" class="btn-add-nav">+ Add Player</a>
+            </nav>
+        </div>
+    </header>
+
+    <main class="main-content">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <div class="alerts-container">
+                    {% for category, message in messages %}
+                        <div class="alert alert-{{ category }}">
+                            {{ message }}
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        {% endwith %}
+
+        {% block content %}{% endblock %}
+    </main>
+
+    <footer class="footer">
+        <div class="footer-container">
+            <div class="footer-ipl-badge">TATA IPL OFFICIAL AUCTION ENGINE</div>
+            <p class="footer-cs-text">Computer Science Fundamentals: <strong>Lists • Dictionaries • Loops • Merge Sort (O(n log n)) • Quick Sort (O(n log n)) • Relational SQL (PK & FK) • CRUD</strong></p>
+        </div>
+    </footer>
+</body>
+</html>

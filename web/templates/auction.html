@@ -23,6 +23,14 @@
         </div>
 
         <div class="arena-stats-strip">
+            <div class="arena-mode-switch">
+                <button type="button" class="btn-mode-quick {% if current_mode == 'mega' %}active-mode{% endif %}" onclick="switchArenaMode('mega')">
+                    ⭐ Mega Auction
+                </button>
+                <button type="button" class="btn-mode-quick {% if current_mode == 'mini' %}active-mode{% endif %}" onclick="switchArenaMode('mini')">
+                    ⚡ Mini Auction
+                </button>
+            </div>
             <div class="strip-pill">
                 <span class="pill-label">Players Sold</span>
                 <span class="pill-val color-green" id="stat-sold-count">{{ stats.sold }}</span>
@@ -127,6 +135,14 @@
 
         <!-- LIVE BIDDING STATUS & AUCTIONEER GAVEL CONSOLE -->
         <div class="auctioneer-broadcast-panel">
+            {% if p.status == 'Unsold' %}
+            <div class="unsold-return-banner mb-3">
+                <span class="banner-icon">🔄</span>
+                <div>
+                    <strong>FINAL ROUND RE-AUCTION:</strong> <strong>{{ p.name }}</strong> went unsold earlier and has returned at the end of the auction! Any franchise with remaining purse can raise their paddle to bid and buy!
+                </div>
+            </div>
+            {% endif %}
             <div class="current-bid-display">
                 <span class="bid-header-label">CURRENT HIGHEST BID</span>
                 <div class="bid-hero-number" id="current-bid-amount">{{ format_currency(p.base_price) }}</div>
@@ -266,6 +282,22 @@ const TEAMS = JSON.parse(document.getElementById('tmpl-teams-data').innerHTML);
 const AUCTION_MODE = document.getElementById('tmpl-auction-mode').innerHTML.trim();
 const ACTIVE_SET = document.getElementById('tmpl-active-set').innerHTML.trim();
 const IS_ACCELERATED = document.getElementById('tmpl-is-accelerated').innerHTML.trim() === 'true';
+
+async function switchArenaMode(mode) {
+    try {
+        const res = await fetch('/api/auction/mode', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ mode: mode })
+        });
+        const data = await res.json();
+        if (data.success) {
+            window.location.reload();
+        }
+    } catch (e) {
+        alert('Error switching mode: ' + e);
+    }
+}
 
 let currentPoolIndex = 0;
 let currentBidAmount = POOL.length ? parseFloat(POOL[0].base_price) : 0;

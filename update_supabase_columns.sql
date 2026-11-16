@@ -449,6 +449,69 @@ UPDATE players SET
     former_team = 'LSG'
 WHERE name = 'Mayank Yadav';
 UPDATE players SET
+    set_name = 'Set 6: Uncapped Players (UN1)',
+    set_code = 'UN1',
+    is_capped = 0,
+    is_overseas = 0,
+    former_team = 'PBKS'
+WHERE name = 'Shashank Singh';
+UPDATE players SET
+    set_name = 'Set 6: Uncapped Players (UN1)',
+    set_code = 'UN1',
+    is_capped = 0,
+    is_overseas = 0,
+    former_team = 'SRH'
+WHERE name = 'Nitish Kumar Reddy';
+UPDATE players SET
+    set_name = 'Set 6: Uncapped Players (UN1)',
+    set_code = 'UN1',
+    is_capped = 0,
+    is_overseas = 0,
+    former_team = 'KKR'
+WHERE name = 'Harshit Rana';
+UPDATE players SET
+    set_name = 'Set 6: Uncapped Players (UN1)',
+    set_code = 'UN1',
+    is_capped = 0,
+    is_overseas = 0,
+    former_team = 'PBKS'
+WHERE name = 'Ashutosh Sharma';
+UPDATE players SET
+    set_name = 'Set 6: Uncapped Players (UN1)',
+    set_code = 'UN1',
+    is_capped = 0,
+    is_overseas = 0,
+    former_team = 'CSK'
+WHERE name = 'Sameer Rizvi';
+UPDATE players SET
+    set_name = 'Set 6: Uncapped Players (UN1)',
+    set_code = 'UN1',
+    is_capped = 0,
+    is_overseas = 0,
+    former_team = 'KKR'
+WHERE name = 'Angkrish Raghuvanshi';
+UPDATE players SET
+    set_name = 'Set 6: Uncapped Players (UN1)',
+    set_code = 'UN1',
+    is_capped = 0,
+    is_overseas = 0,
+    former_team = 'KKR'
+WHERE name = 'Vaibhav Arora';
+UPDATE players SET
+    set_name = 'Set 6: Uncapped Players (UN1)',
+    set_code = 'UN1',
+    is_capped = 0,
+    is_overseas = 0,
+    former_team = 'DC'
+WHERE name = 'Rasikh Salam';
+UPDATE players SET
+    set_name = 'Set 6: Uncapped Players (UN1)',
+    set_code = 'UN1',
+    is_capped = 0,
+    is_overseas = 0,
+    former_team = 'KKR'
+WHERE name = 'Ramandeep Singh';
+UPDATE players SET
     set_name = 'Set 4: Capped Fast Bowlers (FA1)',
     set_code = 'FA1',
     is_capped = 1,

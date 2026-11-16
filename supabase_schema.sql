@@ -457,7 +457,16 @@ INSERT INTO players (player_id, name, role, country, base_price, sold_price, sta
 (46, 'Tilak Varma', 'Batsman', 'India', 4000000.00, 0.00, 'Available', 'Set 6: Uncapped Players (UN1)', 'UN1', 0, 0, 'MI', 1, 0, NULL),
 (47, 'Matheesha Pathirana', 'Bowler', 'Sri Lanka', 4000000.00, 0.00, 'Available', 'Set 6: Uncapped Players (UN1)', 'UN1', 0, 1, 'CSK', 1, 0, NULL),
 (48, 'Mayank Yadav', 'Bowler', 'India', 4000000.00, 0.00, 'Available', 'Set 6: Uncapped Players (UN1)', 'UN1', 0, 0, 'LSG', 1, 0, NULL),
-(49, 'Harshal Patel', 'Bowler', 'India', 20000000.00, 0.00, 'Available', 'Set 4: Capped Fast Bowlers (FA1)', 'FA1', 1, 0, 'PBKS', 1, 0, NULL);
+(49, 'Shashank Singh', 'Batsman', 'India', 5000000.00, 0.00, 'Available', 'Set 6: Uncapped Players (UN1)', 'UN1', 0, 0, 'PBKS', 1, 0, NULL),
+(50, 'Nitish Kumar Reddy', 'Allrounder', 'India', 5000000.00, 0.00, 'Available', 'Set 6: Uncapped Players (UN1)', 'UN1', 0, 0, 'SRH', 1, 0, NULL),
+(51, 'Harshit Rana', 'Bowler', 'India', 4000000.00, 0.00, 'Available', 'Set 6: Uncapped Players (UN1)', 'UN1', 0, 0, 'KKR', 1, 0, NULL),
+(52, 'Ashutosh Sharma', 'Batsman', 'India', 3000000.00, 0.00, 'Available', 'Set 6: Uncapped Players (UN1)', 'UN1', 0, 0, 'PBKS', 1, 0, NULL),
+(53, 'Sameer Rizvi', 'Batsman', 'India', 3000000.00, 0.00, 'Available', 'Set 6: Uncapped Players (UN1)', 'UN1', 0, 0, 'CSK', 1, 0, NULL),
+(54, 'Angkrish Raghuvanshi', 'Batsman', 'India', 3000000.00, 0.00, 'Available', 'Set 6: Uncapped Players (UN1)', 'UN1', 0, 0, 'KKR', 1, 0, NULL),
+(55, 'Vaibhav Arora', 'Bowler', 'India', 2000000.00, 0.00, 'Available', 'Set 6: Uncapped Players (UN1)', 'UN1', 0, 0, 'KKR', 1, 0, NULL),
+(56, 'Rasikh Salam', 'Bowler', 'India', 2000000.00, 0.00, 'Available', 'Set 6: Uncapped Players (UN1)', 'UN1', 0, 0, 'DC', 1, 0, NULL),
+(57, 'Ramandeep Singh', 'Allrounder', 'India', 2000000.00, 0.00, 'Available', 'Set 6: Uncapped Players (UN1)', 'UN1', 0, 0, 'KKR', 1, 0, NULL),
+(58, 'Harshal Patel', 'Bowler', 'India', 20000000.00, 0.00, 'Available', 'Set 4: Capped Fast Bowlers (FA1)', 'FA1', 1, 0, 'PBKS', 1, 0, NULL);
 
 -- 8. Seed Player Career Statistics
 INSERT INTO player_stats (stat_id, player_id, matches, runs, highest_score, batting_avg, strike_rate, fours, sixes, centuries, fifties, wickets, bowling_economy, bowling_avg) VALUES
@@ -509,7 +518,16 @@ INSERT INTO player_stats (stat_id, player_id, matches, runs, highest_score, batt
 (46, 46, 38, 1156, 84, 39.86, 146.33, 95, 55, 0, 6, 0, 0.00, 0.00),
 (47, 47, 20, 0, 0, 0.00, 0.00, 0, 0, 0, 0, 34, 7.88, 17.50),
 (48, 48, 4, 0, 0, 0.00, 0.00, 0, 0, 0, 0, 7, 6.98, 12.14),
-(49, 49, 105, 236, 36, 11.23, 131.11, 20, 11, 0, 0, 135, 8.62, 23.33);
+(49, 49, 24, 423, 68, 35.25, 164.65, 34, 23, 0, 2, 0, 0.00, 0.00),
+(50, 50, 15, 303, 76, 33.67, 142.92, 20, 21, 0, 2, 3, 9.10, 42.00),
+(51, 51, 13, 20, 10, 10.00, 125.00, 2, 1, 0, 0, 19, 9.08, 20.15),
+(52, 52, 11, 189, 61, 27.00, 167.26, 12, 15, 0, 1, 0, 0.00, 0.00),
+(53, 53, 8, 51, 21, 12.75, 118.60, 4, 3, 0, 0, 0, 0.00, 0.00),
+(54, 54, 10, 163, 54, 23.29, 155.24, 16, 6, 0, 1, 0, 0.00, 0.00),
+(55, 55, 10, 5, 5, 5.00, 83.33, 0, 0, 0, 0, 11, 8.90, 25.10),
+(56, 56, 8, 10, 6, 10.00, 100.00, 1, 0, 0, 0, 9, 9.40, 26.20),
+(57, 57, 15, 170, 35, 28.33, 180.85, 11, 12, 0, 0, 6, 8.50, 21.00),
+(58, 58, 105, 236, 36, 11.23, 131.11, 20, 11, 0, 0, 135, 8.62, 23.33);
 
 -- 9. Reset PostgreSQL ID Sequences so future user inserts continue smoothly
 SELECT setval('teams_team_id_seq', (SELECT MAX(team_id) FROM teams));

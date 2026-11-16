@@ -89,12 +89,19 @@ def dashboard():
     total_retention_spend = sum(t.get("retention_spend", 0.0) for t in teams)
     total_rtm_cards_available = sum(t.get("rtm_cards", 0) for t in teams)
 
+    # Separate Capped and Uncapped player pools
+    capped_players = [p for p in players if p.get("is_capped", 1) == 1]
+    uncapped_players = [p for p in players if p.get("is_capped", 1) == 0]
+
     # Base price tiers count
     tiers = {
         "2_cr": len([p for p in players if p.get("base_price") == 20000000.0]),
         "1_5_cr": len([p for p in players if p.get("base_price") == 15000000.0]),
         "1_cr": len([p for p in players if p.get("base_price") == 10000000.0]),
+        "uncapped_50_l": len([p for p in players if p.get("base_price") == 5000000.0]),
         "uncapped_40_l": len([p for p in players if p.get("base_price") == 4000000.0]),
+        "uncapped_30_l": len([p for p in players if p.get("base_price") == 3000000.0]),
+        "uncapped_20_l": len([p for p in players if p.get("base_price") == 2000000.0]),
     }
 
     db_engine = "Supabase PostgreSQL" if (DB_MODE == "supabase" and is_supabase_configured()) else "SQLite3 (Relational)"
@@ -103,6 +110,8 @@ def dashboard():
         "index.html",
         teams=teams,
         players=players,
+        capped_players=capped_players,
+        uncapped_players=uncapped_players,
         auction_sets=auction_sets,
         auction_stats=auction_stats,
         unsold_players=unsold_players,
@@ -115,15 +124,18 @@ def dashboard():
         db_engine=db_engine,
         teams_json=json.dumps(teams),
         players_json=json.dumps(players),
+        capped_players_json=json.dumps(capped_players),
+        uncapped_players_json=json.dumps(uncapped_players),
     )
 
 
 @app.route("/players")
 def players_page():
-    """Rosters with search, set filtering, and DSA sorting (Merge Sort & Quick Sort)."""
+    """Rosters with search, capped/uncapped filtering, and DSA sorting (Merge Sort & Quick Sort by Base Price)."""
     role_filter = request.args.get("role", "").strip()
     set_filter = request.args.get("set", "").strip()
     sort_filter = request.args.get("sort", "").strip()
+    cap_filter = request.args.get("cap", "all").strip().lower()
     search_query = request.args.get("q", "").strip()
 
     if search_query:
@@ -133,20 +145,33 @@ def players_page():
     else:
         players = read_all_players()
 
+    if cap_filter == "capped":
+        players = [p for p in players if p.get("is_capped", 1) == 1]
+    elif cap_filter == "uncapped":
+        players = [p for p in players if p.get("is_capped", 1) == 0]
+
     if set_filter and set_filter != "ALL":
         players = [p for p in players if p.get("set_code") == set_filter]
 
-    # DSA Sorting options
-    if sort_filter == "runs":
-        # Merge Sort (Divide & Conquer)
+    # DSA Sorting options using Merge Sort & Quick Sort by Base Price, Runs, or Avg
+    if sort_filter == "mergesort_price":
+        from dsa.merge_sort import merge_sort
+        players = merge_sort(players, key="base_price", descending=True)
+    elif sort_filter == "mergesort_price_asc":
+        from dsa.merge_sort import merge_sort
+        players = merge_sort(players, key="base_price", descending=False)
+    elif sort_filter == "quicksort_price":
+        from dsa.quick_sort import quick_sort
+        players = quick_sort(players, key="base_price", descending=True)
+    elif sort_filter == "quicksort_price_asc":
+        from dsa.quick_sort import quick_sort
+        players = quick_sort(players, key="base_price", descending=False)
+    elif sort_filter == "runs":
         from dsa.merge_sort import merge_sort
         players = merge_sort(players, key="runs", descending=True)
     elif sort_filter == "avg":
-        # Quick Sort (Pivot Partitioning)
         from dsa.quick_sort import quick_sort
         players = quick_sort(players, key="batting_avg", descending=True)
-    elif sort_filter == "price":
-        players = sorted(players, key=lambda x: x.get("base_price", 0), reverse=True)
 
     auction_sets = get_auction_sets()
 
@@ -156,6 +181,7 @@ def players_page():
         active_role=role_filter,
         active_set=set_filter,
         active_sort=sort_filter,
+        active_cap=cap_filter,
         search_query=search_query,
         auction_sets=auction_sets
     )

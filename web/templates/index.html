@@ -4,14 +4,14 @@
 
 {% block content %}
 <div class="preauction-command-container">
-    <!-- Top Header Bar with Live Mode Toggle Switcher -->
+    <!-- Top Header Bar with Two Prominent Mode Buttons: Mega Auction vs Mini Auction -->
     <div class="preauction-header-bar">
         <div class="preauction-title-block">
             <h1>🏛️ TATA IPL AUCTION COMMAND & PRE-AUCTION CENTER</h1>
             <p>Official BCCI Governing Council Stage • Pre-Auction Regulations • Retentions & RTM Matrix • Sequential Sets Hub</p>
         </div>
 
-        <!-- Mega vs Mini Auction Interactive Switcher -->
+        <!-- 1) TWO PROMINENT BUTTONS: MEGA AUCTION & MINI AUCTION -->
         <div class="mode-switcher-container">
             <button type="button" 
                     id="btn-mode-mega" 
@@ -204,107 +204,202 @@
     </section>
 
     <!-- =========================================================================
-         STAGE 3: REGISTERED PLAYER POOL & SHORTLISTING
+         STAGE 3: TWO LISTS - CAPPED PLAYERS & UNCAPPED PLAYERS WITH DSA SORTING
          ========================================================================= -->
     <section class="stage-section">
         <div class="stage-section-header">
             <div class="stage-title">
-                <span>👥 STAGE 3: REGISTERED PLAYER POOL & SHORTLISTING</span>
-                <span class="stage-badge">{{ players|length }} PLAYERS REGISTERED</span>
+                <span>👥 STAGE 3: CAPPED PLAYERS & UNCAPPED PLAYERS POOLS</span>
+                <span class="stage-badge">TWO DEDICATED LISTS WITH DSA BASE PRICE SORTING</span>
             </div>
-            <div class="dsa-sort-controls">
-                <a href="/players?sort=runs" class="btn btn-outline btn-xs">⚡ Sort by Runs (Merge Sort)</a>
-                <a href="/players?sort=avg" class="btn btn-outline btn-xs">⚡ Sort by Batting Avg (Quick Sort)</a>
-                <a href="/player/add" class="btn btn-primary btn-xs">+ Register Player</a>
+            <div>
+                <a href="/player/add" class="btn btn-primary btn-xs">+ Register New Player</a>
             </div>
         </div>
 
-        <!-- Filter Pills Bar -->
-        <div class="filter-pills-bar mb-3">
-            <span class="filter-pills-label">Base Price Tiers:</span>
-            <span class="badge badge-outline">₹2.00 Cr ({{ tiers['2_cr'] }})</span>
-            <span class="badge badge-outline">₹1.50 Cr ({{ tiers['1_5_cr'] }})</span>
-            <span class="badge badge-outline">₹1.00 Cr ({{ tiers['1_cr'] }})</span>
-            <span class="badge badge-outline">₹40 Lakhs Uncapped ({{ tiers['uncapped_40_l'] }})</span>
+        <!-- 2) DUAL LIST TABS: CAPPED PLAYERS & UNCAPPED PLAYERS -->
+        <div class="cap-tabs-container">
+            <button type="button" class="cap-tab-btn active-cap-tab" id="tab-btn-capped" onclick="switchCapTab('capped')">
+                🧢 Capped Players List ({{ capped_players|length }})
+            </button>
+            <button type="button" class="cap-tab-btn" id="tab-btn-uncapped" onclick="switchCapTab('uncapped')">
+                🌟 Uncapped Players List ({{ uncapped_players|length }})
+            </button>
         </div>
 
-        <div class="matrix-table-card">
-            <div class="table-responsive">
-                <table class="data-table">
-                    <thead>
-                        <tr>
-                            <th>Player Name</th>
-                            <th>Role & Specialization</th>
-                            <th class="text-center">Set Code</th>
-                            <th class="text-center">Status</th>
-                            <th class="text-center">Former Team (RTM)</th>
-                            <th class="text-right">Base Price</th>
-                            <th class="text-right">Sold Price</th>
-                            <th class="text-center">Action</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for p in players[:12] %}
-                        <tr>
-                            <td>
-                                <strong>{{ p.name }}</strong>
-                                {% if p.is_overseas %}<span class="badge badge-overseas ml-1">✈️ Overseas</span>{% endif %}
-                            </td>
-                            <td>{{ p.role }}</td>
-                            <td class="text-center">
-                                <span class="set-code-badge">{{ p.set_code or 'BA1' }}</span>
-                            </td>
-                            <td class="text-center">
-                                <span class="badge badge-{{ p.status|lower }}">{{ p.status }}</span>
-                            </td>
-                            <td class="text-center">
-                                {% if p.former_team %}
-                                    <span class="team-badge-cell team-bg-{{ p.former_team|lower }}">{{ p.former_team }}</span>
-                                {% else %}
-                                    <span class="text-muted text-xs">—</span>
-                                {% endif %}
-                            </td>
-                            <td class="text-right font-bold">{{ format_currency(p.base_price) }}</td>
-                            <td class="text-right font-bold {% if p.sold_price > 0 %}color-gold{% else %}text-muted{% endif %}">
-                                {{ format_currency(p.sold_price) if p.sold_price > 0 else '—' }}
-                            </td>
-                            <td class="text-center">
-                                <a href="/player/{{ p.player_id }}" class="btn btn-outline btn-xs">Profile</a>
-                            </td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
+        <!-- 3) BOTH SORTING TECHNIQUES FOR CAPPED PLAYERS -->
+        <div id="section-capped-players">
+            <div class="sort-technique-bar">
+                <div class="sort-technique-buttons">
+                    <span class="sort-label">Sort Capped by Base Price:</span>
+                    <button type="button" class="btn-sort-technique" id="btn-capped-mergesort" onclick="sortCappedPlayers('merge')">
+                        🔀 Merge Sort (Base Price)
+                    </button>
+                    <button type="button" class="btn-sort-technique" id="btn-capped-quicksort" onclick="sortCappedPlayers('quick')">
+                        ⚡ Quick Sort (Base Price)
+                    </button>
+                    <button type="button" class="btn-sort-technique" id="btn-capped-toggle-dir" onclick="toggleCappedDirection()">
+                        ↕️ High to Low (Desc)
+                    </button>
+                </div>
+                <div class="algo-execution-badge" id="badge-capped-algo">
+                    Complexity: O(n log n) Divide & Conquer / Partitioning
+                </div>
             </div>
-            <div class="table-footer-strip p-3 text-center">
-                <a href="/players" class="btn btn-outline btn-sm">View All {{ players|length }} Registered Players →</a>
+
+            <!-- Capped Players Table -->
+            <div class="matrix-table-card">
+                <div class="table-responsive">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Player Name</th>
+                                <th>Role</th>
+                                <th>Country</th>
+                                <th class="text-center">Set Code</th>
+                                <th class="text-center">Status</th>
+                                <th class="text-center">Former Team (RTM)</th>
+                                <th class="text-right">Base Price (Sort Target)</th>
+                                <th class="text-right">Sold Price</th>
+                                <th class="text-center">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tbody-capped-players">
+                            {% for p in capped_players %}
+                            <tr data-price="{{ p.base_price }}">
+                                <td>
+                                    <strong>{{ p.name }}</strong>
+                                    {% if p.is_overseas %}<span class="badge badge-overseas ml-1">✈️ Overseas</span>{% endif %}
+                                </td>
+                                <td>{{ p.role }}</td>
+                                <td>{{ p.country }}</td>
+                                <td class="text-center">
+                                    <span class="set-code-badge">{{ p.set_code or 'BA1' }}</span>
+                                </td>
+                                <td class="text-center">
+                                    <span class="badge badge-{{ p.status|lower }}">{{ p.status }}</span>
+                                </td>
+                                <td class="text-center">
+                                    {% if p.former_team %}
+                                        <span class="team-badge-cell team-bg-{{ p.former_team|lower }}">{{ p.former_team }}</span>
+                                    {% else %}
+                                        <span class="text-muted text-xs">—</span>
+                                    {% endif %}
+                                </td>
+                                <td class="text-right font-bold color-gold">{{ format_currency(p.base_price) }}</td>
+                                <td class="text-right font-bold {% if p.sold_price > 0 %}color-green{% else %}text-muted{% endif %}">
+                                    {{ format_currency(p.sold_price) if p.sold_price > 0 else '—' }}
+                                </td>
+                                <td class="text-center">
+                                    <a href="/player/{{ p.player_id }}" class="btn btn-outline btn-xs">Profile</a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- 3) BOTH SORTING TECHNIQUES FOR UNCAPPED PLAYERS -->
+        <div id="section-uncapped-players" style="display: none;">
+            <div class="sort-technique-bar">
+                <div class="sort-technique-buttons">
+                    <span class="sort-label">Sort Uncapped by Base Price:</span>
+                    <button type="button" class="btn-sort-technique" id="btn-uncapped-mergesort" onclick="sortUncappedPlayers('merge')">
+                        🔀 Merge Sort (Base Price)
+                    </button>
+                    <button type="button" class="btn-sort-technique" id="btn-uncapped-quicksort" onclick="sortUncappedPlayers('quick')">
+                        ⚡ Quick Sort (Base Price)
+                    </button>
+                    <button type="button" class="btn-sort-technique" id="btn-uncapped-toggle-dir" onclick="toggleUncappedDirection()">
+                        ↕️ High to Low (Desc)
+                    </button>
+                </div>
+                <div class="algo-execution-badge" id="badge-uncapped-algo">
+                    Complexity: O(n log n) Divide & Conquer / Partitioning
+                </div>
+            </div>
+
+            <!-- Uncapped Players Table -->
+            <div class="matrix-table-card">
+                <div class="table-responsive">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Player Name</th>
+                                <th>Role</th>
+                                <th>Country</th>
+                                <th class="text-center">Set Code</th>
+                                <th class="text-center">Status</th>
+                                <th class="text-center">Former Team (RTM)</th>
+                                <th class="text-right">Base Price (Sort Target)</th>
+                                <th class="text-right">Sold Price</th>
+                                <th class="text-center">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tbody-uncapped-players">
+                            {% for p in uncapped_players %}
+                            <tr data-price="{{ p.base_price }}">
+                                <td>
+                                    <strong>{{ p.name }}</strong>
+                                    <span class="badge badge-warning ml-1">🌟 Uncapped</span>
+                                </td>
+                                <td>{{ p.role }}</td>
+                                <td>{{ p.country }}</td>
+                                <td class="text-center">
+                                    <span class="set-code-badge">{{ p.set_code or 'UN1' }}</span>
+                                </td>
+                                <td class="text-center">
+                                    <span class="badge badge-{{ p.status|lower }}">{{ p.status }}</span>
+                                </td>
+                                <td class="text-center">
+                                    {% if p.former_team %}
+                                        <span class="team-badge-cell team-bg-{{ p.former_team|lower }}">{{ p.former_team }}</span>
+                                    {% else %}
+                                        <span class="text-muted text-xs">—</span>
+                                    {% endif %}
+                                </td>
+                                <td class="text-right font-bold color-gold">{{ format_currency(p.base_price) }}</td>
+                                <td class="text-right font-bold {% if p.sold_price > 0 %}color-green{% else %}text-muted{% endif %}">
+                                    {{ format_currency(p.sold_price) if p.sold_price > 0 else '—' }}
+                                </td>
+                                <td class="text-center">
+                                    <a href="/player/{{ p.player_id }}" class="btn btn-outline btn-xs">Profile</a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
     </section>
 
     <!-- =========================================================================
-         STAGE 4: THE ACCELERATED AUCTION PROCESS
+         STAGE 4: INITIAL UNSOLD PLAYERS ROUND (ONLY AT LAST OF AUCTION)
          ========================================================================= -->
     <section class="stage-section">
         <div class="stage-section-header">
             <div class="stage-title">
-                <span>⚡ STAGE 4: THE ACCELERATED AUCTION PROCESS</span>
-                <span class="stage-badge">POST-MAIN ROUND SPEED UP</span>
+                <span>⚡ STAGE 4: INITIAL UNSOLD PLAYERS ROUND (COMES AT LAST ONLY)</span>
+                <span class="stage-badge">END-OF-AUCTION RE-BIDDING</span>
             </div>
         </div>
 
+        <!-- 4) RE-AUCTION UNSOLD PLAYERS EXPLANATION BANNER -->
         <div class="accelerated-banner-box">
             <div class="accelerated-info">
-                <h2>⚡ ACCELERATED AUCTION POOL (RAPID FIRE)</h2>
+                <h2>🔄 RE-AUCTION ROUND: INITIAL UNSOLD PLAYERS</h2>
                 <p>
-                    To manage the large list of shortlisted players, not every player undergoes the slow regular sequence.
-                    Once the initial main rounds conclude, franchises submit shortlists of specific unsold or remaining players
-                    they want brought back under the hammer immediately to finalize squads.
+                    <strong>BCCI Auction Rule:</strong> If players went unsold in regular mega or mini auction rounds, 
+                    they return under the hammer <strong>at the end of the auction only</strong>. 
+                    Any franchise with remaining purse and open squad slots can bid on them to complete their roster!
                 </p>
             </div>
             <div class="accelerated-cta">
-                <a href="/auction?accelerated=1" class="btn btn-hammer btn-lg">
-                    🚀 Start Accelerated Round ({{ unsold_players|length }} Unsold) →
+                <a href="/auction?set=ALL" class="btn btn-hammer btn-lg">
+                    🔨 Enter Live Arena (Unsold Come at End) →
                 </a>
             </div>
         </div>
@@ -319,7 +414,8 @@
                             <th>Role</th>
                             <th class="text-center">Former Team</th>
                             <th class="text-right">Base Price</th>
-                            <th class="text-center">Accelerated Action</th>
+                            <th class="text-center">Status</th>
+                            <th class="text-center">End-of-Auction Status</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -336,12 +432,10 @@
                             </td>
                             <td class="text-right font-bold">{{ format_currency(up.base_price) }}</td>
                             <td class="text-center">
-                                <button type="button" 
-                                        class="btn btn-primary btn-xs btn-shortlist-acc" 
-                                        data-player-id="{{ up.player_id }}"
-                                        data-player-name="{{ up.name }}">
-                                    ⚡ Add to Accelerated Shortlist
-                                </button>
+                                <span class="badge badge-unsold">Unsold</span>
+                            </td>
+                            <td class="text-center">
+                                <span class="badge badge-warning">Queued for End of Auction (Any Team Can Bid)</span>
                             </td>
                         </tr>
                         {% endfor %}
@@ -351,7 +445,7 @@
         </div>
         {% else %}
         <div class="empty-state-card text-center p-4">
-            <p class="text-muted">No players currently marked as Unsold. All players are either available in main sets or sold!</p>
+            <p class="text-muted">No players currently marked as Unsold. All players are currently in regular available sets!</p>
         </div>
         {% endif %}
     </section>
@@ -359,9 +453,18 @@
 
 <!-- Safe Data Storage in HTML5 Templates (Zero VS Code JS Syntax Errors) -->
 <template id="tmpl-mode">{{ current_mode }}</template>
+<template id="tmpl-capped-data">{{ capped_players_json|safe }}</template>
+<template id="tmpl-uncapped-data">{{ uncapped_players_json|safe }}</template>
 
 <script>
-// Mode Switcher: Mega Auction vs Mini Auction
+// Data payloads from templates
+let cappedData = JSON.parse(document.getElementById('tmpl-capped-data').innerHTML);
+let uncappedData = JSON.parse(document.getElementById('tmpl-uncapped-data').innerHTML);
+
+let cappedDesc = true;
+let uncappedDesc = true;
+
+// 1) Mode Switcher: Mega Auction vs Mini Auction
 document.getElementById('btn-mode-mega')?.addEventListener('click', () => switchAuctionMode('mega'));
 document.getElementById('btn-mode-mini')?.addEventListener('click', () => switchAuctionMode('mini'));
 
@@ -381,26 +484,153 @@ async function switchAuctionMode(mode) {
     }
 }
 
-// Add player to Accelerated Shortlist
-document.querySelectorAll('.btn-shortlist-acc').forEach(btn => {
-    btn.addEventListener('click', async function() {
-        const playerId = this.getAttribute('data-player-id');
-        const playerName = this.getAttribute('data-player-name');
-        try {
-            const res = await fetch('/api/auction/shortlist_accelerated', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ player_id: parseInt(playerId) })
-            });
-            const data = await res.json();
-            if (data.success) {
-                alert(`Player '${playerName}' added to Accelerated Auction Round!`);
-                window.location.reload();
-            }
-        } catch (e) {
-            alert('Error adding to accelerated shortlist: ' + e);
+// 2) Tab Switcher between Capped and Uncapped Player Lists
+function switchCapTab(tab) {
+    const btnCapped = document.getElementById('tab-btn-capped');
+    const btnUncapped = document.getElementById('tab-btn-uncapped');
+    const secCapped = document.getElementById('section-capped-players');
+    const secUncapped = document.getElementById('section-uncapped-players');
+
+    if (tab === 'capped') {
+        btnCapped.classList.add('active-cap-tab');
+        btnUncapped.classList.remove('active-cap-tab');
+        secCapped.style.display = 'block';
+        secUncapped.style.display = 'none';
+    } else {
+        btnUncapped.classList.add('active-cap-tab');
+        btnCapped.classList.remove('active-cap-tab');
+        secUncapped.style.display = 'block';
+        secCapped.style.display = 'none';
+    }
+}
+
+// 3) COMPUTER SCIENCE SORTING ALGORITHMS IMPLEMENTATION IN JAVASCRIPT
+
+// Merge Sort (Divide & Conquer, O(n log n))
+function mergeSort(arr, key, desc = true) {
+    if (arr.length <= 1) return arr;
+    const mid = Math.floor(arr.length / 2);
+    const left = mergeSort(arr.slice(0, mid), key, desc);
+    const right = mergeSort(arr.slice(mid), key, desc);
+    return merge(left, right, key, desc);
+}
+
+function merge(left, right, key, desc) {
+    const res = [];
+    let l = 0, r = 0;
+    while (l < left.length && r < right.length) {
+        const comp = desc ? (left[l][key] >= right[r][key]) : (left[l][key] <= right[r][key]);
+        if (comp) {
+            res.push(left[l++]);
+        } else {
+            res.push(right[r++]);
         }
+    }
+    return res.concat(left.slice(l)).concat(right.slice(r));
+}
+
+// Quick Sort (Pivot Partitioning, O(n log n))
+function quickSort(arr, key, desc = true) {
+    if (arr.length <= 1) return arr;
+    const pivot = arr[Math.floor(arr.length / 2)];
+    const left = [];
+    const equal = [];
+    const right = [];
+
+    for (const item of arr) {
+        if (item[key] === pivot[key]) {
+            equal.push(item);
+        } else if (desc ? (item[key] > pivot[key]) : (item[key] < pivot[key])) {
+            left.push(item);
+        } else {
+            right.push(item);
+        }
+    }
+    return quickSort(left, key, desc).concat(equal).concat(quickSort(right, key, desc));
+}
+
+function formatCurrencyJS(val) {
+    if (val >= 10000000) return `₹${(val / 10000000).toFixed(2)} Cr`;
+    if (val >= 100000) return `₹${(val / 100000).toFixed(2)} Lakh`;
+    return `₹${val.toLocaleString('en-IN')}`;
+}
+
+function renderPlayerTable(tbodyId, playersList) {
+    const tbody = document.getElementById(tbodyId);
+    if (!tbody) return;
+
+    tbody.innerHTML = '';
+    playersList.forEach(p => {
+        const formerBadge = p.former_team ? 
+            `<span class="team-badge-cell team-bg-${p.former_team.toLowerCase()}">${p.former_team}</span>` : 
+            `<span class="text-muted text-xs">—</span>`;
+
+        const overseasBadge = p.is_overseas ? `<span class="badge badge-overseas ml-1">✈️ Overseas</span>` : ``;
+        const uncappedBadge = !p.is_capped ? `<span class="badge badge-warning ml-1">🌟 Uncapped</span>` : ``;
+
+        const tr = document.createElement('tr');
+        tr.setAttribute('data-price', p.base_price);
+        tr.innerHTML = `
+            <td><strong>${p.name}</strong>${overseasBadge}${uncappedBadge}</td>
+            <td>${p.role}</td>
+            <td>${p.country || 'India'}</td>
+            <td class="text-center"><span class="set-code-badge">${p.set_code || 'UN1'}</span></td>
+            <td class="text-center"><span class="badge badge-${(p.status || 'available').toLowerCase()}">${p.status || 'Available'}</span></td>
+            <td class="text-center">${formerBadge}</td>
+            <td class="text-right font-bold color-gold">${formatCurrencyJS(p.base_price)}</td>
+            <td class="text-right font-bold ${p.sold_price > 0 ? 'color-green' : 'text-muted'}">${p.sold_price > 0 ? formatCurrencyJS(p.sold_price) : '—'}</td>
+            <td class="text-center"><a href="/player/${p.player_id}" class="btn btn-outline btn-xs">Profile</a></td>
+        `;
+        tbody.appendChild(tr);
     });
-});
+}
+
+// Capped Sorting Handlers
+function sortCappedPlayers(algo) {
+    document.querySelectorAll('#section-capped-players .btn-sort-technique').forEach(b => b.classList.remove('active-sort'));
+    const badge = document.getElementById('badge-capped-algo');
+
+    if (algo === 'merge') {
+        document.getElementById('btn-capped-mergesort')?.classList.add('active-sort');
+        cappedData = mergeSort(cappedData, 'base_price', cappedDesc);
+        badge.innerHTML = `✅ Merge Sort Executed: O(n log n) Divide & Conquer (${cappedDesc ? 'High ➜ Low' : 'Low ➜ High'})`;
+    } else {
+        document.getElementById('btn-capped-quicksort')?.classList.add('active-sort');
+        cappedData = quickSort(cappedData, 'base_price', cappedDesc);
+        badge.innerHTML = `✅ Quick Sort Executed: O(n log n) Pivot Partitioning (${cappedDesc ? 'High ➜ Low' : 'Low ➜ High'})`;
+    }
+    renderPlayerTable('tbody-capped-players', cappedData);
+}
+
+function toggleCappedDirection() {
+    cappedDesc = !cappedDesc;
+    const btn = document.getElementById('btn-capped-toggle-dir');
+    if (btn) btn.innerHTML = cappedDesc ? `↕️ High to Low (Desc)` : `↕️ Low to High (Asc)`;
+    sortCappedPlayers(document.getElementById('btn-capped-quicksort')?.classList.contains('active-sort') ? 'quick' : 'merge');
+}
+
+// Uncapped Sorting Handlers
+function sortUncappedPlayers(algo) {
+    document.querySelectorAll('#section-uncapped-players .btn-sort-technique').forEach(b => b.classList.remove('active-sort'));
+    const badge = document.getElementById('badge-uncapped-algo');
+
+    if (algo === 'merge') {
+        document.getElementById('btn-uncapped-mergesort')?.classList.add('active-sort');
+        uncappedData = mergeSort(uncappedData, 'base_price', uncappedDesc);
+        badge.innerHTML = `✅ Merge Sort Executed: O(n log n) Divide & Conquer (${uncappedDesc ? 'High ➜ Low' : 'Low ➜ High'})`;
+    } else {
+        document.getElementById('btn-uncapped-quicksort')?.classList.add('active-sort');
+        uncappedData = quickSort(uncappedData, 'base_price', uncappedDesc);
+        badge.innerHTML = `✅ Quick Sort Executed: O(n log n) Pivot Partitioning (${uncappedDesc ? 'High ➜ Low' : 'Low ➜ High'})`;
+    }
+    renderPlayerTable('tbody-uncapped-players', uncappedData);
+}
+
+function toggleUncappedDirection() {
+    uncappedDesc = !uncappedDesc;
+    const btn = document.getElementById('btn-uncapped-toggle-dir');
+    if (btn) btn.innerHTML = uncappedDesc ? `↕️ High to Low (Desc)` : `↕️ Low to High (Asc)`;
+    sortUncappedPlayers(document.getElementById('btn-uncapped-quicksort')?.classList.contains('active-sort') ? 'quick' : 'merge');
+}
 </script>
 {% endblock %}

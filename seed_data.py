@@ -714,6 +714,105 @@ INITIAL_PLAYERS: List[Dict[str, Any]] = [
         "stats": {"matches": 4, "runs": 0, "highest_score": 0, "batting_avg": 0.00, "strike_rate": 0.00, "fours": 0, "sixes": 0, "centuries": 0, "fifties": 0, "wickets": 7, "bowling_economy": 6.98, "bowling_avg": 12.14}
     },
     {
+        "name": "Shashank Singh",
+        "role": "Batsman",
+        "country": "India",
+        "base_price": 5000000.0,
+        "set_name": "Set 6: Uncapped Players (UN1)",
+        "set_code": "UN1",
+        "is_capped": False,
+        "former_team": "PBKS",
+        "stats": {"matches": 24, "runs": 423, "highest_score": 68, "batting_avg": 35.25, "strike_rate": 164.65, "fours": 34, "sixes": 23, "centuries": 0, "fifties": 2, "wickets": 0, "bowling_economy": 0.00, "bowling_avg": 0.00}
+    },
+    {
+        "name": "Nitish Kumar Reddy",
+        "role": "Allrounder",
+        "country": "India",
+        "base_price": 5000000.0,
+        "set_name": "Set 6: Uncapped Players (UN1)",
+        "set_code": "UN1",
+        "is_capped": False,
+        "former_team": "SRH",
+        "stats": {"matches": 15, "runs": 303, "highest_score": 76, "batting_avg": 33.67, "strike_rate": 142.92, "fours": 20, "sixes": 21, "centuries": 0, "fifties": 2, "wickets": 3, "bowling_economy": 9.10, "bowling_avg": 42.00}
+    },
+    {
+        "name": "Harshit Rana",
+        "role": "Bowler",
+        "country": "India",
+        "base_price": 4000000.0,
+        "set_name": "Set 6: Uncapped Players (UN1)",
+        "set_code": "UN1",
+        "is_capped": False,
+        "former_team": "KKR",
+        "stats": {"matches": 13, "runs": 20, "highest_score": 10, "batting_avg": 10.00, "strike_rate": 125.00, "fours": 2, "sixes": 1, "centuries": 0, "fifties": 0, "wickets": 19, "bowling_economy": 9.08, "bowling_avg": 20.15}
+    },
+    {
+        "name": "Ashutosh Sharma",
+        "role": "Batsman",
+        "country": "India",
+        "base_price": 3000000.0,
+        "set_name": "Set 6: Uncapped Players (UN1)",
+        "set_code": "UN1",
+        "is_capped": False,
+        "former_team": "PBKS",
+        "stats": {"matches": 11, "runs": 189, "highest_score": 61, "batting_avg": 27.00, "strike_rate": 167.26, "fours": 12, "sixes": 15, "centuries": 0, "fifties": 1, "wickets": 0, "bowling_economy": 0.00, "bowling_avg": 0.00}
+    },
+    {
+        "name": "Sameer Rizvi",
+        "role": "Batsman",
+        "country": "India",
+        "base_price": 3000000.0,
+        "set_name": "Set 6: Uncapped Players (UN1)",
+        "set_code": "UN1",
+        "is_capped": False,
+        "former_team": "CSK",
+        "stats": {"matches": 8, "runs": 51, "highest_score": 21, "batting_avg": 12.75, "strike_rate": 118.60, "fours": 4, "sixes": 3, "centuries": 0, "fifties": 0, "wickets": 0, "bowling_economy": 0.00, "bowling_avg": 0.00}
+    },
+    {
+        "name": "Angkrish Raghuvanshi",
+        "role": "Batsman",
+        "country": "India",
+        "base_price": 3000000.0,
+        "set_name": "Set 6: Uncapped Players (UN1)",
+        "set_code": "UN1",
+        "is_capped": False,
+        "former_team": "KKR",
+        "stats": {"matches": 10, "runs": 163, "highest_score": 54, "batting_avg": 23.29, "strike_rate": 155.24, "fours": 16, "sixes": 6, "centuries": 0, "fifties": 1, "wickets": 0, "bowling_economy": 0.00, "bowling_avg": 0.00}
+    },
+    {
+        "name": "Vaibhav Arora",
+        "role": "Bowler",
+        "country": "India",
+        "base_price": 2000000.0,
+        "set_name": "Set 6: Uncapped Players (UN1)",
+        "set_code": "UN1",
+        "is_capped": False,
+        "former_team": "KKR",
+        "stats": {"matches": 10, "runs": 5, "highest_score": 5, "batting_avg": 5.00, "strike_rate": 83.33, "fours": 0, "sixes": 0, "centuries": 0, "fifties": 0, "wickets": 11, "bowling_economy": 8.90, "bowling_avg": 25.10}
+    },
+    {
+        "name": "Rasikh Salam",
+        "role": "Bowler",
+        "country": "India",
+        "base_price": 2000000.0,
+        "set_name": "Set 6: Uncapped Players (UN1)",
+        "set_code": "UN1",
+        "is_capped": False,
+        "former_team": "DC",
+        "stats": {"matches": 8, "runs": 10, "highest_score": 6, "batting_avg": 10.00, "strike_rate": 100.00, "fours": 1, "sixes": 0, "centuries": 0, "fifties": 0, "wickets": 9, "bowling_economy": 9.40, "bowling_avg": 26.20}
+    },
+    {
+        "name": "Ramandeep Singh",
+        "role": "Allrounder",
+        "country": "India",
+        "base_price": 2000000.0,
+        "set_name": "Set 6: Uncapped Players (UN1)",
+        "set_code": "UN1",
+        "is_capped": False,
+        "former_team": "KKR",
+        "stats": {"matches": 15, "runs": 170, "highest_score": 35, "batting_avg": 28.33, "strike_rate": 180.85, "fours": 11, "sixes": 12, "centuries": 0, "fifties": 0, "wickets": 6, "bowling_economy": 8.50, "bowling_avg": 21.00}
+    },
+    {
         "name": "Harshal Patel",
         "role": "Bowler",
         "country": "India",

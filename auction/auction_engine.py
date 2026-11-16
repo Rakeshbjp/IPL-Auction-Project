@@ -74,7 +74,11 @@ def get_available_players_pool(
     accelerated_only: bool = False
 ) -> List[Dict[str, Any]]:
     """
-    Fetches players in the auction pool, optionally filtered by Set or Accelerated round.
+    Fetches players in the live auction arena pool.
+    Guarantees:
+    - Regular 'Available' players come first.
+    - If players went unsold, at the end of the auction they return under the hammer ('Unsold' status),
+      allowing any team to bid and acquire them, with initial unsold players appearing at last only.
     """
     conn = get_connection()
     cursor = conn.cursor()
@@ -94,14 +98,14 @@ def get_available_players_pool(
 
     if accelerated_only:
         query += " AND (p.accelerated = 1 OR p.status = 'Unsold')"
-    else:
-        query += " AND p.status = 'Available' AND p.is_shortlisted = 1"
-
-    if set_code and set_code != "ALL" and not accelerated_only:
-        query += " AND p.set_code = ?"
+    elif set_code and set_code != "ALL":
+        query += " AND (p.status = 'Available' OR p.status = 'Unsold') AND p.set_code = ?"
         params.append(set_code)
+    else:
+        query += " AND (p.status = 'Available' OR p.status = 'Unsold')"
 
-    query += " ORDER BY p.player_id ASC;"
+    # Available players come first (priority 0); initial unsold players come at last only (priority 1)
+    query += " ORDER BY CASE WHEN p.status = 'Available' THEN 0 ELSE 1 END ASC, p.player_id ASC;"
 
     cursor.execute(query, tuple(params))
     rows = cursor.fetchall()
@@ -393,11 +397,20 @@ def record_winning_bid(player_id: int, team_id: int, sold_price: float) -> bool:
 
 
 def mark_player_unsold(player_id: int) -> bool:
-    """Marks a player as Unsold if no bids were placed and removes from team tables."""
+    """
+    Marks a player as Unsold if no bids were placed.
+    - If previously 'Available', status becomes 'Unsold' and they move to the end of the auction queue.
+    - If already 'Unsold' in the final round and still no team bids, status becomes 'Permanently Unsold'.
+    """
     conn = get_connection()
     cursor = conn.cursor()
     try:
-        cursor.execute("UPDATE players SET status = 'Unsold', sold_price = 0.0, team_id = NULL WHERE player_id = ?;", (player_id,))
+        cursor.execute("SELECT status FROM players WHERE player_id = ?;", (player_id,))
+        row = cursor.fetchone()
+        current_status = row["status"] if row else "Available"
+
+        new_status = 'Permanently Unsold' if current_status == 'Unsold' else 'Unsold'
+        cursor.execute("UPDATE players SET status = ?, sold_price = 0.0, team_id = NULL WHERE player_id = ?;", (new_status, player_id))
         conn.commit()
 
         # Remove from any team squad table

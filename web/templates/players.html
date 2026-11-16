@@ -1,96 +1,118 @@
 {% extends "base.html" %}
 
-{% block title %}IPL Players Roster{% endblock %}
+{% block title %}TATA IPL 2026 - Registered Players Roster{% endblock %}
 
 {% block content %}
 <div class="page-header">
     <div>
         <h1>IPL Registered Players Roster</h1>
-        <p class="subtitle">Showing {{ players|length }} player(s) with career stats</p>
+        <p class="subtitle">Official Auction Pool • {{ players|length }} player(s) listed with complete career records</p>
     </div>
     <div>
-        <a href="/player/add" class="btn btn-primary">+ Add New Player</a>
+        <a href="/player/add" class="btn btn-primary">+ Register New Player</a>
     </div>
 </div>
 
-<!-- Filters & Search Toolbar -->
-<div class="toolbar-card">
-    <!-- Capped vs Uncapped Filter Buttons -->
-    <div class="role-filter-buttons mb-2">
-        <a href="/players?cap=all{% if active_role %}&role={{ active_role }}{% endif %}" class="filter-btn {% if active_cap == 'all' or not active_cap %}active{% endif %}">
-            All Players
-        </a>
-        <a href="/players?cap=capped{% if active_role %}&role={{ active_role }}{% endif %}" class="filter-btn {% if active_cap == 'capped' %}active{% endif %}">
-            🧢 Capped Players
-        </a>
-        <a href="/players?cap=uncapped{% if active_role %}&role={{ active_role }}{% endif %}" class="filter-btn {% if active_cap == 'uncapped' %}active{% endif %}">
-            🌟 Uncapped Players
-        </a>
+<!-- 1) PROPER BUTTONS FOR CAPPED PLAYERS, UNCAPPED PLAYERS & ROLES -->
+<div class="player-filters-toolbar">
+    <!-- Category Filter Buttons (Capped vs Uncapped) -->
+    <div class="player-filter-group">
+        <span class="filter-group-title">Player Category:</span>
+        <div class="filter-buttons-cluster">
+            <a href="/players?cap=all{% if active_role %}&role={{ active_role }}{% endif %}{% if active_sort %}&sort={{ active_sort }}{% endif %}" 
+               class="btn-filter-pill {% if active_cap == 'all' or not active_cap %}active-pill{% endif %}">
+                👥 All Players
+            </a>
+            <a href="/players?cap=capped{% if active_role %}&role={{ active_role }}{% endif %}{% if active_sort %}&sort={{ active_sort }}{% endif %}" 
+               class="btn-filter-pill {% if active_cap == 'capped' %}active-pill{% endif %}">
+                🧢 Capped Players (Marquee Stars)
+            </a>
+            <a href="/players?cap=uncapped{% if active_role %}&role={{ active_role }}{% endif %}{% if active_sort %}&sort={{ active_sort }}{% endif %}" 
+               class="btn-filter-pill {% if active_cap == 'uncapped' %}active-pill{% endif %}">
+                🌟 Uncapped Players (Emerging Talent)
+            </a>
+        </div>
     </div>
 
     <!-- Role Filter Buttons -->
-    <div class="role-filter-buttons">
-        <a href="/players{% if active_cap %}&cap={{ active_cap }}{% endif %}" class="filter-btn {% if not active_role and not search_query %}active{% endif %}">All Roles</a>
-        <a href="/players?role=Bowler{% if active_cap %}&cap={{ active_cap }}{% endif %}" class="filter-btn {% if active_role == 'Bowler' %}active{% endif %}">⚡ Bowlers Only</a>
-        <a href="/players?role=Batsman{% if active_cap %}&cap={{ active_cap }}{% endif %}" class="filter-btn {% if active_role == 'Batsman' %}active{% endif %}">🏏 Batsmen</a>
-        <a href="/players?role=Allrounder{% if active_cap %}&cap={{ active_cap }}{% endif %}" class="filter-btn {% if active_role == 'Allrounder' %}active{% endif %}">🔥 Allrounders</a>
-        <a href="/players?role=Wicketkeeper{% if active_cap %}&cap={{ active_cap }}{% endif %}" class="filter-btn {% if active_role == 'Wicketkeeper' %}active{% endif %}">🧤 Wicketkeepers</a>
+    <div class="player-filter-group">
+        <span class="filter-group-title">Specialization:</span>
+        <div class="filter-buttons-cluster">
+            <a href="/players{% if active_cap %}&cap={{ active_cap }}{% endif %}{% if active_sort %}&sort={{ active_sort }}{% endif %}" 
+               class="btn-filter-pill {% if not active_role and not search_query %}active-pill{% endif %}">
+                All Roles
+            </a>
+            <a href="/players?role=Batsman{% if active_cap %}&cap={{ active_cap }}{% endif %}{% if active_sort %}&sort={{ active_sort }}{% endif %}" 
+               class="btn-filter-pill {% if active_role == 'Batsman' %}active-pill{% endif %}">
+                🏏 Batters
+            </a>
+            <a href="/players?role=Allrounder{% if active_cap %}&cap={{ active_cap }}{% endif %}{% if active_sort %}&sort={{ active_sort }}{% endif %}" 
+               class="btn-filter-pill {% if active_role == 'Allrounder' %}active-pill{% endif %}">
+                🔥 All-rounders
+            </a>
+            <a href="/players?role=Wicketkeeper{% if active_cap %}&cap={{ active_cap }}{% endif %}{% if active_sort %}&sort={{ active_sort }}{% endif %}" 
+               class="btn-filter-pill {% if active_role == 'Wicketkeeper' %}active-pill{% endif %}">
+                🧤 Wicketkeepers
+            </a>
+            <a href="/players?role=Bowler{% if active_cap %}&cap={{ active_cap }}{% endif %}{% if active_sort %}&sort={{ active_sort }}{% endif %}" 
+               class="btn-filter-pill {% if active_role == 'Bowler' %}active-pill{% endif %}">
+                ⚡ Bowlers
+            </a>
+        </div>
     </div>
 
     <!-- Search Form -->
     <form action="/players" method="GET" class="search-form mt-2">
         {% if active_cap %}<input type="hidden" name="cap" value="{{ active_cap }}">{% endif %}
+        {% if active_role %}<input type="hidden" name="role" value="{{ active_role }}">{% endif %}
+        {% if active_sort %}<input type="hidden" name="sort" value="{{ active_sort }}">{% endif %}
         <input 
             type="text" 
             name="q" 
-            placeholder="Find Virat Kohli or any player..." 
+            placeholder="Search by player name (e.g. Virat Kohli, Bumrah, Shashank)..." 
             value="{{ search_query }}"
             class="search-input"
         >
         <button type="submit" class="btn btn-secondary">🔍 Search</button>
-        {% if search_query or active_role or active_cap != 'all' %}
-            <a href="/players" class="btn btn-outline">Clear</a>
+        {% if search_query or active_role or active_cap != 'all' or active_sort %}
+            <a href="/players" class="btn btn-outline">Clear Filters</a>
         {% endif %}
     </form>
 
-    <!-- Base Price DSA Sorting Techniques Bar -->
+    <!-- 2 & 5) REPLACING TECHNICAL TERMS WITH AUTHENTIC IPL AUCTION TERMS -->
     <div class="sort-technique-bar mt-3">
         <div class="sort-technique-buttons">
-            <span class="sort-label">Sort by Base Price:</span>
+            <span class="sort-label">Auction Rankings:</span>
             <a href="/players?sort=mergesort_price{% if active_cap %}&cap={{ active_cap }}{% endif %}{% if active_role %}&role={{ active_role }}{% endif %}" 
                class="btn-sort-technique {% if active_sort == 'mergesort_price' %}active-sort{% endif %}">
-                🔀 Merge Sort (Price ↓)
+                💰 Highest Base Price (Top Tier)
             </a>
             <a href="/players?sort=mergesort_price_asc{% if active_cap %}&cap={{ active_cap }}{% endif %}{% if active_role %}&role={{ active_role }}{% endif %}" 
                class="btn-sort-technique {% if active_sort == 'mergesort_price_asc' %}active-sort{% endif %}">
-                🔀 Merge Sort (Price ↑)
+                🏷️ Lowest Base Price (Budget Picks)
             </a>
-            <a href="/players?sort=quicksort_price{% if active_cap %}&cap={{ active_cap }}{% endif %}{% if active_role %}&role={{ active_role }}{% endif %}" 
-               class="btn-sort-technique {% if active_sort == 'quicksort_price' %}active-sort{% endif %}">
-                ⚡ Quick Sort (Price ↓)
-            </a>
-            <a href="/players?sort=quicksort_price_asc{% if active_cap %}&cap={{ active_cap }}{% endif %}{% if active_role %}&role={{ active_role }}{% endif %}" 
-               class="btn-sort-technique {% if active_sort == 'quicksort_price_asc' %}active-sort{% endif %}">
-                ⚡ Quick Sort (Price ↑)
-            </a>
-            <a href="/players?sort=runs{% if active_cap %}&cap={{ active_cap }}{% endif %}" 
+            <a href="/players?sort=runs{% if active_cap %}&cap={{ active_cap }}{% endif %}{% if active_role %}&role={{ active_role }}{% endif %}" 
                class="btn-sort-technique {% if active_sort == 'runs' %}active-sort{% endif %}">
-                Runs (Merge Sort)
+                🏏 Most Career Runs (Orange Cap)
             </a>
-            <a href="/players?sort=avg{% if active_cap %}&cap={{ active_cap }}{% endif %}" 
+            <a href="/players?sort=avg{% if active_cap %}&cap={{ active_cap }}{% endif %}{% if active_role %}&role={{ active_role }}{% endif %}" 
                class="btn-sort-technique {% if active_sort == 'avg' %}active-sort{% endif %}">
-                Avg (Quick Sort)
+                ⚡ Best Batting Average
             </a>
         </div>
-        {% if 'mergesort' in active_sort %}
-            <div class="algo-execution-badge">
-                ✅ Merge Sort: Divide & Conquer O(n log n)
-            </div>
-        {% elif 'quicksort' in active_sort %}
-            <div class="algo-execution-badge">
-                ✅ Quick Sort: Pivot Partitioning O(n log n)
-            </div>
-        {% endif %}
+        <div class="algo-execution-badge">
+            {% if active_sort == 'mergesort_price' %}
+                ✅ Sorted: Highest Base Price Tier First
+            {% elif active_sort == 'mergesort_price_asc' %}
+                ✅ Sorted: Budget Base Price Tier First
+            {% elif active_sort == 'runs' %}
+                ✅ Sorted: Most Career Runs Leaderboard
+            {% elif active_sort == 'avg' %}
+                ✅ Sorted: Highest Career Batting Average
+            {% else %}
+                ⚡ Official BCCI Auction Listing
+            {% endif %}
+        </div>
     </div>
 </div>
 
@@ -102,50 +124,60 @@
                 <tr>
                     <th>ID</th>
                     <th>Player Name</th>
+                    <th>Category</th>
                     <th>Role</th>
                     <th>Country</th>
                     <th class="text-right">Base Price</th>
                     <th class="text-center">Status</th>
-                    <th class="text-center">Team</th>
+                    <th class="text-center">Franchise</th>
                     <th class="text-right">Matches</th>
                     <th class="text-right">Runs</th>
                     <th class="text-right">Bat Avg</th>
                     <th class="text-right">SR</th>
                     <th class="text-right">Wickets</th>
                     <th class="text-right">Economy</th>
-                    <th class="text-center">Actions</th>
+                    <th class="text-center">Action</th>
                 </tr>
             </thead>
             <tbody>
                 {% for p in players %}
                 <tr>
-                    <td class="text-dim">#{{ p.player_id }}</td>
+                    <td>#{{ p.player_id }}</td>
                     <td>
                         <a href="/player/{{ p.player_id }}" class="player-link font-bold">{{ p.name }}</a>
+                        {% if p.is_overseas %}
+                            <span class="badge badge-overseas ml-1">✈️ Overseas</span>
+                        {% endif %}
                     </td>
-                    <td><span class="badge badge-role role-{{ p.role|lower }}">{{ p.role }}</span></td>
+                    <td>
+                        {% if p.is_capped %}
+                            <span class="badge badge-primary">🧢 Capped</span>
+                        {% else %}
+                            <span class="badge badge-warning">🌟 Uncapped</span>
+                        {% endif %}
+                    </td>
+                    <td><span class="badge badge-role">{{ p.role }}</span></td>
                     <td>{{ p.country }}</td>
-                    <td class="text-right">{{ format_currency(p.base_price) }}</td>
+                    <td class="text-right font-bold color-gold">{{ format_currency(p.base_price) }}</td>
                     <td class="text-center">
-                        <span class="badge badge-status status-{{ p.status|lower }}">{{ p.status }}</span>
+                        <span class="badge badge-{{ p.status|lower }}">{{ p.status }}</span>
                     </td>
-                    <td class="text-center font-bold color-gold">{{ p.team_code or '-' }}</td>
+                    <td class="text-center">
+                        {% if p.team_code %}
+                            <span class="team-badge-cell team-bg-{{ p.team_code|lower }}">{{ p.team_code }}</span>
+                        {% else %}
+                            <span class="text-dim">—</span>
+                        {% endif %}
+                    </td>
                     <td class="text-right">{{ p.matches }}</td>
-                    <td class="text-right font-bold color-gold">{{ "{:,}".format(p.runs) }}</td>
+                    <td class="text-right font-bold">{{ "{:,}".format(p.runs) }}</td>
                     <td class="text-right">{{ "%.2f"|format(p.batting_avg) }}</td>
                     <td class="text-right">{{ "%.2f"|format(p.strike_rate) }}</td>
-                    <td class="text-right font-bold color-red">{{ p.wickets }}</td>
+                    <td class="text-right color-red">{{ p.wickets }}</td>
                     <td class="text-right">{{ "%.2f"|format(p.bowling_economy) }}</td>
-                    <td class="text-center actions-cell">
-                        <a href="/player/{{ p.player_id }}/edit" class="btn-icon edit-icon" title="Update Statistics">✏️</a>
-                        <form action="/player/{{ p.player_id }}/delete" method="POST" style="display:inline;" onsubmit="return confirm('Delete {{ p.name }}?');">
-                            <button type="submit" class="btn-icon delete-icon" title="Delete Player">🗑️</button>
-                        </form>
+                    <td class="text-center">
+                        <a href="/player/{{ p.player_id }}" class="btn btn-outline btn-xs">Profile</a>
                     </td>
-                </tr>
-                {% else %}
-                <tr>
-                    <td colspan="14" class="text-center py-4">No players found matching the query.</td>
                 </tr>
                 {% endfor %}
             </tbody>

@@ -1,13 +1,13 @@
 {% extends "base.html" %}
 
-{% block title %}Update {{ player.name }} - Boss Q7{% endblock %}
+{% block title %}Update {{ player.name }} - Player Profile{% endblock %}
 
 {% block content %}
 <div class="page-header">
     <div>
         <a href="/player/{{ player.player_id }}" class="back-link">← Back to Player Profile</a>
-        <h1>Update Player Statistics (Boss Question 7)</h1>
-        <p class="subtitle">Modifies statistics for <strong>{{ player.name }}</strong> (ID #{{ player.player_id }}) in 'player_stats' table</p>
+        <h1>Update Player Statistics</h1>
+        <p class="subtitle">Official Career Records for <strong>{{ player.name }}</strong> (ID #{{ player.player_id }})</p>
     </div>
 </div>
 

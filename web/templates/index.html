@@ -83,14 +83,14 @@
             </div>
         </div>
 
-        <!-- 10 Franchise Retentions, Purse & RTM Matrix Table -->
+        <!-- 10 Franchise Retentions, Purse & RTM Matrix Table (Click on any Team Name for Full Info & Retain Options) -->
         <div class="matrix-table-card">
             <div class="table-responsive">
                 <table class="data-table">
                     <thead>
                         <tr>
                             <th class="text-center">Emblem</th>
-                            <th>Franchise Name</th>
+                            <th>Franchise Name (Click for Info & Retentions)</th>
                             <th class="text-center">Retentions (0-6)</th>
                             <th>Retained Star Players</th>
                             <th class="text-center">RTM Cards Available</th>
@@ -104,13 +104,14 @@
                     <tbody id="rtm-matrix-body">
                         {% for t in teams %}
                         <tr>
-                            <td class="text-center">
+                            <td class="text-center" onclick="openTeamDossier('{{ t.short_code }}')" style="cursor: pointer;" title="Click to view full franchise dossier & manage retentions">
                                 <span class="team-badge-cell team-bg-{{ t.short_code|lower }}">
                                     {{ t.short_code }}
                                 </span>
                             </td>
-                            <td>
-                                <strong>{{ t.team_name }}</strong>
+                            <td onclick="openTeamDossier('{{ t.short_code }}')" style="cursor: pointer;" title="Click to view full franchise dossier & manage retentions">
+                                <strong class="color-gold" style="text-decoration: underline;">{{ t.team_name }}</strong>
+                                <span class="text-xs text-muted block">🔍 Click to View Info, Squad & Retain</span>
                             </td>
                             <td class="text-center font-bold">
                                 {{ t.retentions_count }} / 6
@@ -145,7 +146,9 @@
                                 {{ t.overseas_count }} / 8
                             </td>
                             <td class="text-center">
-                                <a href="/teams?team={{ t.short_code }}" class="btn btn-outline btn-xs">Inspect Squad →</a>
+                                <button type="button" class="btn btn-primary btn-xs" onclick="openTeamDossier('{{ t.short_code }}')">
+                                    📋 Team Info & Retain
+                                </button>
                             </td>
                         </tr>
                         {% endfor %}
@@ -204,13 +207,13 @@
     </section>
 
     <!-- =========================================================================
-         STAGE 3: TWO LISTS - CAPPED PLAYERS & UNCAPPED PLAYERS WITH DSA SORTING
+         STAGE 3: TWO LISTS - CAPPED PLAYERS & UNCAPPED PLAYERS (CLEAN AUCTION TERMS)
          ========================================================================= -->
     <section class="stage-section">
         <div class="stage-section-header">
             <div class="stage-title">
                 <span>👥 STAGE 3: CAPPED PLAYERS & UNCAPPED PLAYERS POOLS</span>
-                <span class="stage-badge">TWO DEDICATED LISTS WITH DSA BASE PRICE SORTING</span>
+                <span class="stage-badge">OFFICIAL AUCTION CATEGORIES & VALUATIONS</span>
             </div>
             <div>
                 <a href="/player/add" class="btn btn-primary btn-xs">+ Register New Player</a>
@@ -227,23 +230,23 @@
             </button>
         </div>
 
-        <!-- 3) BOTH SORTING TECHNIQUES FOR CAPPED PLAYERS -->
+        <!-- CAPPED PLAYERS SECTION (NATURAL AUCTION SORTING LABELS) -->
         <div id="section-capped-players">
             <div class="sort-technique-bar">
                 <div class="sort-technique-buttons">
-                    <span class="sort-label">Sort Capped by Base Price:</span>
-                    <button type="button" class="btn-sort-technique" id="btn-capped-mergesort" onclick="sortCappedPlayers('merge')">
-                        🔀 Merge Sort (Base Price)
+                    <span class="sort-label">Auction Price Order:</span>
+                    <button type="button" class="btn-sort-technique" id="btn-capped-mergesort" onclick="sortCappedPlayers('high')">
+                        💰 Highest Base Price (Top Tier)
                     </button>
-                    <button type="button" class="btn-sort-technique" id="btn-capped-quicksort" onclick="sortCappedPlayers('quick')">
-                        ⚡ Quick Sort (Base Price)
+                    <button type="button" class="btn-sort-technique" id="btn-capped-quicksort" onclick="sortCappedPlayers('low')">
+                        🏷️ Lowest Base Price (Budget Tier)
                     </button>
                     <button type="button" class="btn-sort-technique" id="btn-capped-toggle-dir" onclick="toggleCappedDirection()">
-                        ↕️ High to Low (Desc)
+                        ↕️ Toggle High / Low
                     </button>
                 </div>
                 <div class="algo-execution-badge" id="badge-capped-algo">
-                    Complexity: O(n log n) Divide & Conquer / Partitioning
+                    ⚡ Official Auction Category Valuation
                 </div>
             </div>
 
@@ -259,7 +262,7 @@
                                 <th class="text-center">Set Code</th>
                                 <th class="text-center">Status</th>
                                 <th class="text-center">Former Team (RTM)</th>
-                                <th class="text-right">Base Price (Sort Target)</th>
+                                <th class="text-right">Base Price</th>
                                 <th class="text-right">Sold Price</th>
                                 <th class="text-center">Action</th>
                             </tr>
@@ -301,23 +304,23 @@
             </div>
         </div>
 
-        <!-- 3) BOTH SORTING TECHNIQUES FOR UNCAPPED PLAYERS -->
+        <!-- UNCAPPED PLAYERS SECTION (NATURAL AUCTION SORTING LABELS) -->
         <div id="section-uncapped-players" style="display: none;">
             <div class="sort-technique-bar">
                 <div class="sort-technique-buttons">
-                    <span class="sort-label">Sort Uncapped by Base Price:</span>
-                    <button type="button" class="btn-sort-technique" id="btn-uncapped-mergesort" onclick="sortUncappedPlayers('merge')">
-                        🔀 Merge Sort (Base Price)
+                    <span class="sort-label">Auction Price Order:</span>
+                    <button type="button" class="btn-sort-technique" id="btn-uncapped-mergesort" onclick="sortUncappedPlayers('high')">
+                        💰 Highest Base Price (₹50 Lakhs Tier)
                     </button>
-                    <button type="button" class="btn-sort-technique" id="btn-uncapped-quicksort" onclick="sortUncappedPlayers('quick')">
-                        ⚡ Quick Sort (Base Price)
+                    <button type="button" class="btn-sort-technique" id="btn-uncapped-quicksort" onclick="sortUncappedPlayers('low')">
+                        🏷️ Lowest Base Price (₹20 Lakhs Tier)
                     </button>
                     <button type="button" class="btn-sort-technique" id="btn-uncapped-toggle-dir" onclick="toggleUncappedDirection()">
-                        ↕️ High to Low (Desc)
+                        ↕️ Toggle High / Low
                     </button>
                 </div>
                 <div class="algo-execution-badge" id="badge-uncapped-algo">
-                    Complexity: O(n log n) Divide & Conquer / Partitioning
+                    ⚡ Emerging Talent Auction Ranking
                 </div>
             </div>
 
@@ -333,7 +336,7 @@
                                 <th class="text-center">Set Code</th>
                                 <th class="text-center">Status</th>
                                 <th class="text-center">Former Team (RTM)</th>
-                                <th class="text-right">Base Price (Sort Target)</th>
+                                <th class="text-right">Base Price</th>
                                 <th class="text-right">Sold Price</th>
                                 <th class="text-center">Action</th>
                             </tr>
@@ -451,6 +454,116 @@
     </section>
 </div>
 
+<!-- =========================================================================
+     4) INTERACTIVE TEAM INFO & RETENTION MANAGEMENT MODAL (CLICK TEAM NAME)
+     ========================================================================= -->
+<div class="rtm-modal-overlay" id="team-dossier-modal">
+    <div class="team-dossier-modal-box">
+        <div class="team-dossier-header">
+            <div class="team-dossier-title-wrap">
+                <span class="team-badge-cell" id="modal-team-emblem" style="font-size: 1.1rem; padding: 0.5rem 1rem;">CSK</span>
+                <div>
+                    <h2 id="modal-team-name">Chennai Super Kings</h2>
+                    <span class="text-xs text-muted" id="modal-team-sub">Official IPL Franchise Dossier</span>
+                </div>
+            </div>
+            <button type="button" class="btn btn-outline btn-xs" onclick="closeTeamDossier()">✕ Close</button>
+        </div>
+
+        <!-- Purse & Limits Strip -->
+        <div class="team-dossier-metrics">
+            <div class="dossier-metric-item">
+                <span>Initial Purse</span>
+                <strong id="modal-initial-purse">₹120.00 Cr</strong>
+            </div>
+            <div class="dossier-metric-item">
+                <span>Retention Spend</span>
+                <strong class="color-red" id="modal-retention-spend">₹0.00</strong>
+            </div>
+            <div class="dossier-metric-item">
+                <span>Auction Purse Left</span>
+                <strong class="color-green" id="modal-remaining-budget">₹120.00 Cr</strong>
+            </div>
+            <div class="dossier-metric-item">
+                <span>Squad Progress</span>
+                <strong id="modal-squad-count">0 / 25 (min 18)</strong>
+            </div>
+            <div class="dossier-metric-item">
+                <span>Overseas</span>
+                <strong id="modal-overseas-count">0 / 8 max</strong>
+            </div>
+            <div class="dossier-metric-item">
+                <span>RTM Cards</span>
+                <strong class="color-gold" id="modal-rtm-cards">1 Card</strong>
+            </div>
+        </div>
+
+        <!-- Retained Players Section -->
+        <div class="mb-4">
+            <h3 style="font-size: 1.1rem; color: #ffffff; margin-bottom: 0.5rem; display: flex; justify-content: space-between;">
+                <span>📌 Retained Players (<span id="modal-retained-count">0</span> / 6)</span>
+                <span class="text-xs text-muted">Deducted from ₹120 Cr Purse</span>
+            </h3>
+            <div class="table-responsive">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Player Name</th>
+                            <th>Role</th>
+                            <th class="text-right">Retention Cost</th>
+                            <th class="text-center">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="modal-retained-tbody">
+                        <!-- Populated by JavaScript -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Players Picked in Live Auction Section -->
+        <div class="mb-4">
+            <h3 style="font-size: 1.1rem; color: #ffffff; margin-bottom: 0.5rem;">
+                🔨 Players Picked in Live Auction (<span id="modal-auction-count">0</span>)
+            </h3>
+            <div class="table-responsive">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Player Name</th>
+                            <th>Role</th>
+                            <th class="text-right">Winning Bid</th>
+                            <th class="text-right">Runs / Wickets</th>
+                        </tr>
+                    </thead>
+                    <tbody id="modal-auction-tbody">
+                        <!-- Populated by JavaScript -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Option to Retain Player for this Franchise -->
+        <div class="retention-control-panel">
+            <h4 style="color: var(--ipl-gold); margin: 0; font-size: 1rem;">
+                ⚡ Retain a Player for this Franchise (Mega or Mini Auction Setup)
+            </h4>
+            <p class="text-xs text-muted mt-1">
+                Select an available player to retain. Automatically calculates retention spend, updates auction purse, and assigns RTM cards!
+            </p>
+            <div class="retention-form-row">
+                <select id="select-retain-player" class="retention-select" style="flex: 2; min-width: 220px;">
+                    <option value="">-- Choose Player to Retain --</option>
+                </select>
+                <input type="number" id="input-retain-price" class="retention-input" placeholder="Price (₹)" style="flex: 1; min-width: 130px;">
+                <button type="button" class="btn btn-gold btn-sm" onclick="submitPlayerRetention()">
+                    📌 Retain Player
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- Safe Data Storage in HTML5 Templates (Zero VS Code JS Syntax Errors) -->
 <template id="tmpl-mode">{{ current_mode }}</template>
 <template id="tmpl-capped-data">{{ capped_players_json|safe }}</template>
@@ -463,8 +576,10 @@ let uncappedData = JSON.parse(document.getElementById('tmpl-uncapped-data').inne
 
 let cappedDesc = true;
 let uncappedDesc = true;
+let activeTeamModalCode = null;
+let activeTeamModalId = null;
 
-// 1) Mode Switcher: Mega Auction vs Mini Auction
+// Mode Switcher: Mega Auction vs Mini Auction
 document.getElementById('btn-mode-mega')?.addEventListener('click', () => switchAuctionMode('mega'));
 document.getElementById('btn-mode-mini')?.addEventListener('click', () => switchAuctionMode('mini'));
 
@@ -484,7 +599,7 @@ async function switchAuctionMode(mode) {
     }
 }
 
-// 2) Tab Switcher between Capped and Uncapped Player Lists
+// Tab Switcher between Capped and Uncapped Player Lists
 function switchCapTab(tab) {
     const btnCapped = document.getElementById('tab-btn-capped');
     const btnUncapped = document.getElementById('tab-btn-uncapped');
@@ -504,9 +619,162 @@ function switchCapTab(tab) {
     }
 }
 
-// 3) COMPUTER SCIENCE SORTING ALGORITHMS IMPLEMENTATION IN JAVASCRIPT
+// 4) INTERACTIVE TEAM INFO & RETENTION MANAGEMENT MODAL
+async function openTeamDossier(teamCode) {
+    try {
+        const res = await fetch(`/api/team/${teamCode}/details`);
+        const json = await res.json();
+        if (!json.success) {
+            alert('Could not load franchise dossier: ' + json.message);
+            return;
+        }
 
-// Merge Sort (Divide & Conquer, O(n log n))
+        const d = json.data;
+        const team = d.team;
+        activeTeamModalCode = team.short_code;
+        activeTeamModalId = team.team_id;
+
+        // Header
+        const emblem = document.getElementById('modal-team-emblem');
+        emblem.innerText = team.short_code;
+        emblem.className = `team-badge-cell team-bg-${team.short_code.toLowerCase()}`;
+        document.getElementById('modal-team-name').innerText = team.team_name;
+        document.getElementById('modal-team-sub').innerText = `Official IPL Franchise Dossier • ID #${team.team_id}`;
+
+        // Metrics
+        document.getElementById('modal-initial-purse').innerText = formatCurrencyJS(team.total_budget);
+        document.getElementById('modal-retention-spend').innerText = formatCurrencyJS(team.retention_spend || 0);
+        document.getElementById('modal-remaining-budget').innerText = formatCurrencyJS(team.remaining_budget);
+        document.getElementById('modal-squad-count').innerText = `${d.total_squad} / ${team.max_squad_size || 25} (min 18)`;
+        document.getElementById('modal-overseas-count').innerText = `${d.overseas_count} / ${team.max_overseas || 8} max`;
+        
+        const mode = document.getElementById('tmpl-mode').innerHTML.trim();
+        document.getElementById('modal-rtm-cards').innerText = mode === 'mega' ? `🃏 ${team.rtm_cards} Cards` : `0 (Mini Auction)`;
+
+        // Retained players table
+        const retTbody = document.getElementById('modal-retained-tbody');
+        retTbody.innerHTML = '';
+        document.getElementById('modal-retained-count').innerText = d.retained_players.length;
+
+        if (d.retained_players.length > 0) {
+            d.retained_players.forEach(p => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td><strong>${p.name}</strong> ${p.is_overseas ? '<span class=\"badge badge-overseas ml-1\">✈️</span>' : ''}</td>
+                    <td>${p.role}</td>
+                    <td class=\"text-right font-bold color-gold\">${formatCurrencyJS(p.sold_price || p.base_price)}</td>
+                    <td class=\"text-center\">
+                        <button type=\"button\" class=\"btn btn-outline btn-xs\" onclick=\"releasePlayer(${team.team_id}, ${p.player_id})\">
+                            ❌ Release to Pool
+                        </button>
+                    </td>
+                `;
+                retTbody.appendChild(tr);
+            });
+        } else {
+            retTbody.innerHTML = `<tr><td colspan=\"4\" class=\"text-center text-muted p-2\">No players retained yet for this franchise.</td></tr>`;
+        }
+
+        // Auction picked players table
+        const aucTbody = document.getElementById('modal-auction-tbody');
+        aucTbody.innerHTML = '';
+        document.getElementById('modal-auction-count').innerText = d.auction_picked_players.length;
+
+        if (d.auction_picked_players.length > 0) {
+            d.auction_picked_players.forEach(p => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td><strong>${p.name}</strong></td>
+                    <td>${p.role}</td>
+                    <td class=\"text-right font-bold color-green\">${formatCurrencyJS(p.sold_price)}</td>
+                    <td class=\"text-right\">${p.runs} runs / ${p.wickets} wkts</td>
+                `;
+                aucTbody.appendChild(tr);
+            });
+        } else {
+            aucTbody.innerHTML = `<tr><td colspan=\"4\" class=\"text-center text-muted p-2\">No players purchased in auction yet.</td></tr>`;
+        }
+
+        // Available to retain dropdown
+        const selectRetain = document.getElementById('select-retain-player');
+        selectRetain.innerHTML = '<option value=\"\">-- Choose Available Player to Retain --</option>';
+        d.available_to_retain.forEach(p => {
+            const opt = document.createElement('option');
+            opt.value = p.player_id;
+            opt.setAttribute('data-base', p.base_price);
+            opt.innerText = `${p.name} (${p.role} • ${formatCurrencyJS(p.base_price)})`;
+            selectRetain.appendChild(opt);
+        });
+
+        // Set default price when player is picked
+        selectRetain.onchange = function() {
+            const selectedOpt = this.options[this.selectedIndex];
+            const base = selectedOpt.getAttribute('data-base');
+            document.getElementById('input-retain-price').value = base ? parseFloat(base) : '';
+        };
+
+        document.getElementById('team-dossier-modal').classList.add('open');
+    } catch (e) {
+        alert('Error loading team info: ' + e);
+    }
+}
+
+function closeTeamDossier() {
+    document.getElementById('team-dossier-modal').classList.remove('open');
+}
+
+async function submitPlayerRetention() {
+    const select = document.getElementById('select-retain-player');
+    const playerId = select.value;
+    const price = document.getElementById('input-retain-price').value;
+
+    if (!playerId || !activeTeamModalId) {
+        alert('Please choose a player to retain.');
+        return;
+    }
+
+    try {
+        const res = await fetch('/api/team/retain', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                team_id: activeTeamModalId,
+                player_id: parseInt(playerId),
+                retention_price: price ? parseFloat(price) : null
+            })
+        });
+        const data = await res.json();
+        alert(data.message);
+        if (data.success) {
+            window.location.reload();
+        }
+    } catch (e) {
+        alert('Error retaining player: ' + e);
+    }
+}
+
+async function releasePlayer(teamId, playerId) {
+    if (!confirm('Release this player back to the available auction pool? Retention funds will be refunded!')) return;
+    try {
+        const res = await fetch('/api/team/release', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                team_id: teamId,
+                player_id: playerId
+            })
+        });
+        const data = await res.json();
+        alert(data.message);
+        if (data.success) {
+            window.location.reload();
+        }
+    } catch (e) {
+        alert('Error releasing player: ' + e);
+    }
+}
+
+// 2 & 5) REPLACING TECHNICAL SORTING TERMS WITH BROADCAST VALUATIONS
 function mergeSort(arr, key, desc = true) {
     if (arr.length <= 1) return arr;
     const mid = Math.floor(arr.length / 2);
@@ -529,7 +797,6 @@ function merge(left, right, key, desc) {
     return res.concat(left.slice(l)).concat(right.slice(r));
 }
 
-// Quick Sort (Pivot Partitioning, O(n log n))
 function quickSort(arr, key, desc = true) {
     if (arr.length <= 1) return arr;
     const pivot = arr[Math.floor(arr.length / 2)];
@@ -586,18 +853,18 @@ function renderPlayerTable(tbodyId, playersList) {
 }
 
 // Capped Sorting Handlers
-function sortCappedPlayers(algo) {
+function sortCappedPlayers(order) {
     document.querySelectorAll('#section-capped-players .btn-sort-technique').forEach(b => b.classList.remove('active-sort'));
     const badge = document.getElementById('badge-capped-algo');
 
-    if (algo === 'merge') {
+    if (order === 'high') {
         document.getElementById('btn-capped-mergesort')?.classList.add('active-sort');
-        cappedData = mergeSort(cappedData, 'base_price', cappedDesc);
-        badge.innerHTML = `✅ Merge Sort Executed: O(n log n) Divide & Conquer (${cappedDesc ? 'High ➜ Low' : 'Low ➜ High'})`;
+        cappedData = mergeSort(cappedData, 'base_price', true);
+        badge.innerHTML = `💰 Top Tier Base Price First (₹2.00 Cr ➜ ₹1.50 Cr ➜ ₹1.00 Cr)`;
     } else {
         document.getElementById('btn-capped-quicksort')?.classList.add('active-sort');
-        cappedData = quickSort(cappedData, 'base_price', cappedDesc);
-        badge.innerHTML = `✅ Quick Sort Executed: O(n log n) Pivot Partitioning (${cappedDesc ? 'High ➜ Low' : 'Low ➜ High'})`;
+        cappedData = quickSort(cappedData, 'base_price', false);
+        badge.innerHTML = `🏷️ Budget Tier Base Price First (₹75 Lakhs ➜ ₹1.00 Cr ➜ ₹2.00 Cr)`;
     }
     renderPlayerTable('tbody-capped-players', cappedData);
 }
@@ -606,22 +873,22 @@ function toggleCappedDirection() {
     cappedDesc = !cappedDesc;
     const btn = document.getElementById('btn-capped-toggle-dir');
     if (btn) btn.innerHTML = cappedDesc ? `↕️ High to Low (Desc)` : `↕️ Low to High (Asc)`;
-    sortCappedPlayers(document.getElementById('btn-capped-quicksort')?.classList.contains('active-sort') ? 'quick' : 'merge');
+    sortCappedPlayers(cappedDesc ? 'high' : 'low');
 }
 
 // Uncapped Sorting Handlers
-function sortUncappedPlayers(algo) {
+function sortUncappedPlayers(order) {
     document.querySelectorAll('#section-uncapped-players .btn-sort-technique').forEach(b => b.classList.remove('active-sort'));
     const badge = document.getElementById('badge-uncapped-algo');
 
-    if (algo === 'merge') {
+    if (order === 'high') {
         document.getElementById('btn-uncapped-mergesort')?.classList.add('active-sort');
-        uncappedData = mergeSort(uncappedData, 'base_price', uncappedDesc);
-        badge.innerHTML = `✅ Merge Sort Executed: O(n log n) Divide & Conquer (${uncappedDesc ? 'High ➜ Low' : 'Low ➜ High'})`;
+        uncappedData = mergeSort(uncappedData, 'base_price', true);
+        badge.innerHTML = `💰 Highest Uncapped Tier First (₹50 Lakhs ➜ ₹40L ➜ ₹30L ➜ ₹20L)`;
     } else {
         document.getElementById('btn-uncapped-quicksort')?.classList.add('active-sort');
-        uncappedData = quickSort(uncappedData, 'base_price', uncappedDesc);
-        badge.innerHTML = `✅ Quick Sort Executed: O(n log n) Pivot Partitioning (${uncappedDesc ? 'High ➜ Low' : 'Low ➜ High'})`;
+        uncappedData = quickSort(uncappedData, 'base_price', false);
+        badge.innerHTML = `🏷️ Entry Budget Tier First (₹20 Lakhs ➜ ₹30L ➜ ₹40L ➜ ₹50L)`;
     }
     renderPlayerTable('tbody-uncapped-players', uncappedData);
 }
@@ -630,7 +897,7 @@ function toggleUncappedDirection() {
     uncappedDesc = !uncappedDesc;
     const btn = document.getElementById('btn-uncapped-toggle-dir');
     if (btn) btn.innerHTML = uncappedDesc ? `↕️ High to Low (Desc)` : `↕️ Low to High (Asc)`;
-    sortUncappedPlayers(document.getElementById('btn-uncapped-quicksort')?.classList.contains('active-sort') ? 'quick' : 'merge');
+    sortUncappedPlayers(uncappedDesc ? 'high' : 'low');
 }
 </script>
 {% endblock %}

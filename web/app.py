@@ -35,6 +35,10 @@ from crud.team_crud import (
     get_team_purchased_players,
     get_team_budget_overview,
     get_team_by_id,
+    get_team_by_code,
+    retain_player_for_team,
+    release_player_from_team,
+    get_team_full_dossier,
 )
 from auction.auction_engine import (
     get_available_players_pool,
@@ -281,13 +285,14 @@ def teams_page():
     """Franchise Squads, Purse Tracking, Retentions & RTM Cards."""
     teams = read_all_teams()
     selected_code = request.args.get("team", "CSK").strip().upper()
-    squad_data = get_team_purchased_players(selected_code)
+    dossier = get_team_full_dossier(selected_code)
     current_mode = get_auction_mode()
     return render_template(
         "teams.html",
         teams=teams,
         selected_code=selected_code,
-        squad_data=squad_data,
+        dossier=dossier,
+        squad_data=dossier,
         current_mode=current_mode
     )
 
@@ -455,6 +460,44 @@ def api_auction_reset():
     reset_entire_auction()
     flash("Auction state reset! All purses and RTM cards restored.", "success")
     return redirect(url_for("auction_page"))
+
+
+@app.route("/api/team/<team_code>/details", methods=["GET"])
+def api_team_details(team_code):
+    """Returns complete franchise details: info, retentions, auction buys, and available players to retain."""
+    dossier = get_team_full_dossier(team_code)
+    if not dossier:
+        return jsonify({"success": False, "message": "Team not found"}), 404
+    return jsonify({"success": True, "data": dossier})
+
+
+@app.route("/api/team/retain", methods=["POST"])
+def api_team_retain():
+    """Retains a player for a franchise."""
+    data = request.get_json() or {}
+    team_id = int(data.get("team_id", 0))
+    player_id = int(data.get("player_id", 0))
+    retention_price = float(data.get("retention_price", 0.0)) if data.get("retention_price") else None
+
+    if not team_id or not player_id:
+        return jsonify({"success": False, "message": "Team ID and Player ID are required."}), 400
+
+    success, msg = retain_player_for_team(team_id, player_id, retention_price)
+    return jsonify({"success": success, "message": msg})
+
+
+@app.route("/api/team/release", methods=["POST"])
+def api_team_release():
+    """Releases a player from a franchise back to the available pool."""
+    data = request.get_json() or {}
+    team_id = int(data.get("team_id", 0))
+    player_id = int(data.get("player_id", 0))
+
+    if not team_id or not player_id:
+        return jsonify({"success": False, "message": "Team ID and Player ID are required."}), 400
+
+    success, msg = release_player_from_team(team_id, player_id)
+    return jsonify({"success": success, "message": msg})
 
 
 if __name__ == "__main__":

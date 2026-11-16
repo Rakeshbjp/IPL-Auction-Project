@@ -1,16 +1,19 @@
 {% extends "base.html" %}
 
-{% block title %}Franchise Squads & Budgets - Boss Q9 & Q10{% endblock %}
+{% block title %}TATA IPL 2026 - Franchise Squads, Purse & Retention Management{% endblock %}
 
 {% block content %}
 <div class="page-header">
     <div>
-        <h1>Franchise Squads & Purse Management</h1>
-        <p class="subtitle">Answering Boss Question 9 (Purchased Players) & Question 10 (Remaining Team Budget)</p>
+        <h1>🏆 Franchise Squads & Purse Management</h1>
+        <p class="subtitle">Official IPL 2026 Roster Management • Squad Bounds: 18–25 Players • Overseas: Max 8 • RTM Card Rules Active</p>
+    </div>
+    <div>
+        <a href="/auction" class="btn btn-primary">🔨 Enter Live Auction Arena →</a>
     </div>
 </div>
 
-<!-- Team Selector Buttons -->
+<!-- Franchise Switcher Pills -->
 <div class="team-pills-container">
     {% for t in teams %}
     <a href="/teams?team={{ t.short_code }}" class="team-pill {% if t.short_code == selected_code %}active{% endif %}">
@@ -20,35 +23,158 @@
     {% endfor %}
 </div>
 
-<!-- Selected Franchise Overview (Boss Q10 & Q9) -->
 {% set team = squad_data.team %}
 {% if team %}
+<!-- Franchise Profile & Purse Card -->
 <div class="card mt-4 franchise-card">
     <div class="franchise-header">
-        <div>
-            <h2>{{ team.team_name }} ({{ team.short_code }})</h2>
-            <p class="text-dim">Franchise ID #{{ team.team_id }} • Official IPL 2026 Roster</p>
+        <div style="display: flex; align-items: center; gap: 1rem;">
+            <span class="team-badge-cell team-bg-{{ team.short_code|lower }}" style="font-size: 1.25rem; padding: 0.6rem 1.25rem;">
+                {{ team.short_code }}
+            </span>
+            <div>
+                <h2>{{ team.team_name }}</h2>
+                <p class="text-dim">Official IPL 2026 Franchise Dossier • ID #{{ team.team_id }}</p>
+            </div>
         </div>
+
         <div class="franchise-purse-badges">
             <div class="purse-badge">
                 <span class="badge-label">Initial Purse</span>
                 <span class="badge-val">{{ format_currency(team.total_budget) }}</span>
             </div>
             <div class="purse-badge">
-                <span class="badge-label">Spent in Auction</span>
-                <span class="badge-val color-red">{{ squad_data.total_spent_fmt }}</span>
+                <span class="badge-label">Retention Spend</span>
+                <span class="badge-val color-red">{{ squad_data.retention_spend_fmt }}</span>
             </div>
             <div class="purse-badge">
-                <span class="badge-label">Remaining Budget (Boss Q10)</span>
+                <span class="badge-label">Auction Purse Left</span>
                 <span class="badge-val color-green">{{ squad_data.remaining_budget_fmt }}</span>
+            </div>
+            <div class="purse-badge">
+                <span class="badge-label">Squad Progress</span>
+                <span class="badge-val {% if squad_data.total_squad >= 18 %}color-green{% else %}color-gold{% endif %}">
+                    {{ squad_data.total_squad }} / 25
+                </span>
+            </div>
+            <div class="purse-badge">
+                <span class="badge-label">Overseas</span>
+                <span class="badge-val {% if squad_data.overseas_count >= 8 %}color-red{% else %}color-blue{% endif %}">
+                    {{ squad_data.overseas_count }} / 8 max
+                </span>
+            </div>
+            <div class="purse-badge">
+                <span class="badge-label">RTM Cards Available</span>
+                <span class="badge-val color-gold">
+                    {% if current_mode == 'mega' %}
+                        🃏 {{ team.rtm_cards }} Cards
+                    {% else %}
+                        0 (Mini Auction)
+                    {% endif %}
+                </span>
             </div>
         </div>
     </div>
 
-    <!-- Purchased Players Table (Boss Q9) -->
+    <!-- 1) PRE-AUCTION RETAINED PLAYERS SECTION -->
     <div class="squad-section mt-4">
-        <h3>Purchased Players ({{ squad_data.players|length }} / {{ team.max_squad_size }})</h3>
-        {% if squad_data.players %}
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h3>📌 Pre-Auction Retained Players ({{ squad_data.retained_players|length }} / 6)</h3>
+            <span class="text-xs text-muted">Deducted from ₹120 Cr Base Purse ahead of Auction</span>
+        </div>
+
+        {% if squad_data.retained_players %}
+        <div class="table-responsive mt-2">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Player Name</th>
+                        <th>Role</th>
+                        <th>Country</th>
+                        <th class="text-right">Retention Cost</th>
+                        <th class="text-right">Matches</th>
+                        <th class="text-right">Runs</th>
+                        <th class="text-right">Bat Avg</th>
+                        <th class="text-right">Wickets</th>
+                        <th class="text-center">Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for p in squad_data.retained_players %}
+                    <tr>
+                        <td>
+                            <a href="/player/{{ p.player_id }}" class="player-link font-bold">{{ p.name }}</a>
+                            {% if p.is_overseas %}
+                                <span class="badge badge-overseas ml-1">✈️ Overseas</span>
+                            {% endif %}
+                        </td>
+                        <td><span class="badge badge-role">{{ p.role }}</span></td>
+                        <td>{{ p.country }}</td>
+                        <td class="text-right font-bold color-gold">{{ format_currency(p.sold_price or p.base_price) }}</td>
+                        <td class="text-right">{{ p.matches }}</td>
+                        <td class="text-right">{{ p.runs }}</td>
+                        <td class="text-right">{{ "%.2f"|format(p.batting_avg or 0.0) }}</td>
+                        <td class="text-right color-red">{{ p.wickets }}</td>
+                        <td class="text-center">
+                            <button type="button" 
+                                    class="btn btn-outline btn-xs" 
+                                    data-team-id="{{ team.team_id }}" 
+                                    data-player-id="{{ p.player_id }}" 
+                                    onclick="releasePlayerFromSquad(this)">
+                                ❌ Release to Pool
+                            </button>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="empty-state mt-2" style="padding: 1.5rem;">
+            <p>ℹ️ No players currently retained for {{ team.team_name }}. (Enters Mega Auction with all 6 RTM cards active!)</p>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- 2) INTERACTIVE RETENTION CONTROL PANEL -->
+    <div class="retention-control-panel mt-4">
+        <h4 style="color: var(--ipl-gold); margin: 0; font-size: 1.05rem;">
+            ⚡ Retain a Player for {{ team.team_name }} (Mega or Mini Auction Setup)
+        </h4>
+        <p class="text-xs text-muted mt-1">
+            Retain available players to strengthen your roster before or during the auction. Retention cost will be deducted from {{ team.short_code }}'s purse and RTM cards will automatically adjust!
+        </p>
+        <div class="retention-form-row mt-2">
+            <select id="squad-select-retain" class="retention-select" style="flex: 2; min-width: 250px;">
+                <option value="">-- Choose Available Player to Retain --</option>
+                {% for p in squad_data.available_to_retain %}
+                <option value="{{ p.player_id }}" data-base="{{ p.base_price }}">
+                    {{ p.name }} ({{ p.role }} • {{ p.country }} • {{ format_currency(p.base_price) }})
+                </option>
+                {% endfor %}
+            </select>
+            <input type="number" 
+                   id="squad-input-retain-price" 
+                   class="retention-input" 
+                   placeholder="Retention Cost (₹)" 
+                   style="flex: 1; min-width: 150px;">
+            <button type="button" 
+                    class="btn btn-gold btn-sm" 
+                    id="btn-submit-squad-retain"
+                    data-team-id="{{ team.team_id }}">
+                📌 Retain Player
+            </button>
+        </div>
+    </div>
+
+    <!-- 3) PURCHASED IN LIVE AUCTION SECTION -->
+    <div class="squad-section mt-4">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h3>🔨 Players Picked in Live Auction Arena ({{ squad_data.auction_picked_players|length }})</h3>
+            <span class="text-xs text-muted">Sold under the hammer during live bidding</span>
+        </div>
+
+        {% if squad_data.auction_picked_players %}
         <div class="table-responsive mt-2">
             <table class="data-table">
                 <thead>
@@ -57,37 +183,128 @@
                         <th>Role</th>
                         <th>Country</th>
                         <th class="text-right">Base Price</th>
-                        <th class="text-right">Sold Price</th>
+                        <th class="text-right">Winning Bid</th>
+                        <th class="text-right">Matches</th>
                         <th class="text-right">Runs</th>
                         <th class="text-right">Bat Avg</th>
                         <th class="text-right">Wickets</th>
                         <th class="text-right">Economy</th>
+                        <th class="text-center">Action</th>
                     </tr>
                 </thead>
                 <tbody>
-                    {% for p in squad_data.players %}
+                    {% for p in squad_data.auction_picked_players %}
                     <tr>
-                        <td><a href="/player/{{ p.player_id }}" class="player-link font-bold">{{ p.name }}</a></td>
+                        <td>
+                            <a href="/player/{{ p.player_id }}" class="player-link font-bold">{{ p.name }}</a>
+                            {% if p.is_overseas %}
+                                <span class="badge badge-overseas ml-1">✈️ Overseas</span>
+                            {% endif %}
+                        </td>
                         <td><span class="badge badge-role">{{ p.role }}</span></td>
                         <td>{{ p.country }}</td>
                         <td class="text-right">{{ format_currency(p.base_price) }}</td>
                         <td class="text-right font-bold color-gold">{{ format_currency(p.sold_price) }}</td>
+                        <td class="text-right">{{ p.matches }}</td>
                         <td class="text-right">{{ p.runs }}</td>
-                        <td class="text-right">{{ "%.2f"|format(p.batting_avg) }}</td>
+                        <td class="text-right">{{ "%.2f"|format(p.batting_avg or 0.0) }}</td>
                         <td class="text-right color-red">{{ p.wickets }}</td>
-                        <td class="text-right">{{ "%.2f"|format(p.bowling_economy) }}</td>
+                        <td class="text-right">{{ "%.2f"|format(p.bowling_economy or 0.0) }}</td>
+                        <td class="text-center">
+                            <button type="button" 
+                                    class="btn btn-outline btn-xs" 
+                                    data-team-id="{{ team.team_id }}" 
+                                    data-player-id="{{ p.player_id }}" 
+                                    onclick="releasePlayerFromSquad(this)">
+                                ❌ Release
+                            </button>
+                        </td>
                     </tr>
                     {% endfor %}
                 </tbody>
             </table>
         </div>
         {% else %}
-        <div class="empty-state">
-            <p>🏏 {{ team.team_name }} has not purchased any players yet in this auction session.</p>
-            <a href="/auction" class="btn btn-primary mt-2">🔨 Go to Auction Room & Place Bids</a>
+        <div class="empty-state mt-2" style="padding: 1.5rem;">
+            <p>🏏 {{ team.team_name }} has not purchased any players in the live auction arena yet.</p>
+            <a href="/auction" class="btn btn-primary mt-2">🔨 Go to Live Auction Room & Bid</a>
         </div>
         {% endif %}
     </div>
 </div>
 {% endif %}
+
+<script>
+// Auto-fill price when selecting a player to retain
+const selRetain = document.getElementById('squad-select-retain');
+if (selRetain) {
+    selRetain.addEventListener('change', function() {
+        const opt = this.options[this.selectedIndex];
+        const base = opt.getAttribute('data-base');
+        document.getElementById('squad-input-retain-price').value = base ? parseFloat(base) : '';
+    });
+}
+
+// Retain Player Handler
+const btnRetain = document.getElementById('btn-submit-squad-retain');
+if (btnRetain) {
+    btnRetain.addEventListener('click', async function() {
+        const teamId = parseInt(this.getAttribute('data-team-id'));
+        const playerId = document.getElementById('squad-select-retain').value;
+        const price = document.getElementById('squad-input-retain-price').value;
+
+        if (!playerId) {
+            alert('Please select an available player to retain.');
+            return;
+        }
+
+        try {
+            const res = await fetch('/api/team/retain', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    team_id: teamId,
+                    player_id: parseInt(playerId),
+                    retention_price: price ? parseFloat(price) : null
+                })
+            });
+            const data = await res.json();
+            alert(data.message);
+            if (data.success) {
+                window.location.reload();
+            }
+        } catch (e) {
+            alert('Error retaining player: ' + e);
+        }
+    });
+}
+
+// Release Player Handler
+async function releasePlayerFromSquad(btn) {
+    const teamId = parseInt(btn.getAttribute('data-team-id'));
+    const playerId = parseInt(btn.getAttribute('data-player-id'));
+
+    if (!confirm('Are you sure you want to release this player? Funds will be refunded to team purse!')) {
+        return;
+    }
+
+    try {
+        const res = await fetch('/api/team/release', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                team_id: teamId,
+                player_id: playerId
+            })
+        });
+        const data = await res.json();
+        alert(data.message);
+        if (data.success) {
+            window.location.reload();
+        }
+    } catch (e) {
+        alert('Error releasing player: ' + e);
+    }
+}
+</script>
 {% endblock %}

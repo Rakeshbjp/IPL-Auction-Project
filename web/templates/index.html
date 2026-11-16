@@ -1,231 +1,151 @@
 {% extends "base.html" %}
 
-{% block title %}IPL Batting & Auction Analysis Dashboard{% endblock %}
+{% block title %}TATA IPL 2026 Pre-Auction & Command Center{% endblock %}
 
 {% block content %}
-<div class="analytics-layout">
-    <!-- LEFT SIDEBAR: FILTERS (Matching Image 3) -->
-    <aside class="sidebar-filters">
-        <div class="sidebar-header">
-            <span class="filter-icon">⚡</span>
-            <h3>FILTERS</h3>
+<div class="preauction-command-container">
+    <!-- Top Header Bar with Live Mode Toggle Switcher -->
+    <div class="preauction-header-bar">
+        <div class="preauction-title-block">
+            <h1>🏛️ TATA IPL AUCTION COMMAND & PRE-AUCTION CENTER</h1>
+            <p>Official BCCI Governing Council Stage • Pre-Auction Regulations • Retentions & RTM Matrix • Sequential Sets Hub</p>
         </div>
 
-        <!-- Player Name Dropdown -->
-        <div class="filter-group">
-            <label class="filter-label">Player Name</label>
-            <select id="player-select" class="sidebar-select">
-                <option value="ALL">All Players (All-Star)</option>
-                {% for p in top_runs %}
-                <option value="{{ p.name }}">{{ p.name }} ({{ p.role }})</option>
-                {% endfor %}
-            </select>
+        <!-- Mega vs Mini Auction Interactive Switcher -->
+        <div class="mode-switcher-container">
+            <button type="button" 
+                    id="btn-mode-mega" 
+                    class="mode-toggle-btn {% if current_mode == 'mega' %}active-mode{% endif %}"
+                    data-mode="mega">
+                ⭐ Mega Auction (RTM Active)
+            </button>
+            <button type="button" 
+                    id="btn-mode-mini" 
+                    class="mode-toggle-btn {% if current_mode == 'mini' %}active-mode{% endif %}"
+                    data-mode="mini">
+                ⚡ Mini Auction (0 RTM Cards)
+            </button>
         </div>
+    </div>
 
-        <!-- Team Checkboxes with Official Badges -->
-        <div class="filter-group mt-3">
-            <div class="team-filter-header">
-                <label class="filter-label">Teams (10 Franchises)</label>
-                <button type="button" id="btn-select-all-teams" class="btn-text-link">Select All</button>
+    <!-- =========================================================================
+         STAGE 1: PRE-AUCTION PREPARATIONS, PURSE & SQUAD LIMITS, RETENTIONS & RTM
+         ========================================================================= -->
+    <section class="stage-section">
+        <div class="stage-section-header">
+            <div class="stage-title">
+                <span>📋 STAGE 1: PRE-AUCTION PREPARATIONS & FRANCHISE CONSTRAINTS</span>
+                <span class="stage-badge">MANDATORY BCCI REGULATIONS</span>
             </div>
-            <div class="teams-checkbox-list">
-                {% for t in teams %}
-                <label class="team-checkbox-item" data-team-code="{{ t.short_code }}">
-                    <input type="checkbox" name="team_filter" value="{{ t.short_code }}" checked class="team-chk">
-                    <span class="team-pill-badge team-bg-{{ t.short_code|lower }}">
-                        {{ t.short_code }}
+            <a href="/auction" class="btn btn-primary btn-sm">🔨 Enter Live Arena →</a>
+        </div>
+
+        <!-- 4 Key Pre-Auction Constraint Cards -->
+        <div class="preauction-kpi-grid">
+            <div class="preauction-kpi-card">
+                <div class="kpi-card-icon">💰</div>
+                <div class="kpi-card-info">
+                    <span class="kpi-card-label">Fixed Franchise Budget</span>
+                    <strong class="kpi-card-value">₹120.00 CR</strong>
+                    <span class="kpi-card-sub">League Total: {{ format_currency(total_purse_league) }}</span>
+                </div>
+            </div>
+
+            <div class="preauction-kpi-card">
+                <div class="kpi-card-icon">👥</div>
+                <div class="kpi-card-info">
+                    <span class="kpi-card-label">Squad Size Bounds</span>
+                    <strong class="kpi-card-value">18 – 25 PLAYERS</strong>
+                    <span class="kpi-card-sub">Min 18 required • Max 25 allowed</span>
+                </div>
+            </div>
+
+            <div class="preauction-kpi-card">
+                <div class="kpi-card-icon">✈️</div>
+                <div class="kpi-card-info">
+                    <span class="kpi-card-label">Overseas Player Cap</span>
+                    <strong class="kpi-card-value">MAX 8 OVERSEAS</strong>
+                    <span class="kpi-card-sub">Paddle disabled if quota filled</span>
+                </div>
+            </div>
+
+            <div class="preauction-kpi-card">
+                <div class="kpi-card-icon">🃏</div>
+                <div class="kpi-card-info">
+                    <span class="kpi-card-label">Right-To-Match (RTM)</span>
+                    <strong class="kpi-card-value" id="kpi-rtm-status">
+                        {% if current_mode == 'mega' %}6 - RETENTIONS{% else %}0 (DISABLED){% endif %}
+                    </strong>
+                    <span class="kpi-card-sub" id="kpi-rtm-sub">
+                        {% if current_mode == 'mega' %}{{ total_rtm_cards_available }} Cards Active in League{% else %}RTM card cannot be used in Mini Auction{% endif %}
                     </span>
-                    <span class="team-name-text">{{ t.team_name }}</span>
-                </label>
-                {% endfor %}
-            </div>
-        </div>
-
-        <button type="button" id="btn-clear-filters" class="btn-clear-all mt-4">
-            🔄 Clear All Filters
-        </button>
-
-        <!-- Quick Switch to Live Arena -->
-        <div class="sidebar-cta-card mt-4">
-            <div class="cta-title">🔨 LIVE AUCTION ARENA</div>
-            <p class="cta-desc">Watch 10 franchise tables bid live with hammer knockdowns!</p>
-            <a href="/auction" class="btn btn-primary btn-sm btn-block mt-2">Enter Live Arena →</a>
-        </div>
-    </aside>
-
-    <!-- RIGHT MAIN: KPI CARDS & 5 HIGH-TECH CHARTS (Matching Image 3) -->
-    <section class="analytics-main">
-        <!-- Dashboard Top Banner -->
-        <div class="analytics-top-bar">
-            <div>
-                <h1 class="broadcast-heading">IPL BATTING & PLAYER ANALYSIS DASHBOARD</h1>
-                <p class="broadcast-sub">Official Real-Time Analytics • Active Engine: <span class="badge badge-db">{{ db_engine }}</span></p>
-            </div>
-            <div class="broadcast-actions">
-                <a href="/auction" class="btn btn-auction-nav">🔨 GO TO AUCTION STAGE</a>
-                <a href="/players" class="btn btn-outline">📋 Full Player Roster</a>
-            </div>
-        </div>
-
-        <!-- 4 TOP GLOWING METRIC CARDS (Exact match to Image 3) -->
-        <div class="kpi-banner-grid">
-            <!-- 1. Total Runs (Gradient Orange with Batsman Icon) -->
-            <div class="kpi-banner-card card-orange">
-                <div class="card-art batsman-art">🏏</div>
-                <div class="kpi-banner-content">
-                    <span class="kpi-tag">Total Runs</span>
-                    <span class="kpi-stat-number" id="kpi-runs">{{ "{:,}".format(total_runs) }}</span>
-                    <span class="kpi-sub-text">League Total Runs</span>
-                </div>
-            </div>
-
-            <!-- 2. Total 4s (Gradient Cyan/Blue with '4' Icon) -->
-            <div class="kpi-banner-card card-blue">
-                <div class="card-art num-art">4</div>
-                <div class="kpi-banner-content">
-                    <span class="kpi-tag">Total 4s</span>
-                    <span class="kpi-stat-number" id="kpi-fours">{{ "{:,}".format(total_fours) }}</span>
-                    <span class="kpi-sub-text">Boundaries Hit</span>
-                </div>
-            </div>
-
-            <!-- 3. Total 6s (Gradient Purple with '6' Icon) -->
-            <div class="kpi-banner-card card-purple">
-                <div class="card-art num-art">6</div>
-                <div class="kpi-banner-content">
-                    <span class="kpi-tag">Total 6s</span>
-                    <span class="kpi-stat-number" id="kpi-sixes">{{ "{:,}".format(total_sixes) }}</span>
-                    <span class="kpi-sub-text">Maximums Cleared</span>
-                </div>
-            </div>
-
-            <!-- 4. Avg Strike Rate (Gradient Green with Speedometer Gauge) -->
-            <div class="kpi-banner-card card-green">
-                <div class="card-art gauge-art">⚡</div>
-                <div class="kpi-banner-content">
-                    <span class="kpi-tag">Avg Strike Rate</span>
-                    <span class="kpi-stat-number" id="kpi-sr">{{ "%.2f"|format(avg_strike_rate) }}</span>
-                    <span class="kpi-sub-text">Scoring Velocity</span>
                 </div>
             </div>
         </div>
 
-        <!-- CHARTS GRID ROW 1 (Matching Image 3) -->
-        <div class="charts-row mt-4">
-            <!-- Chart 1: Sum of Runs by Player Name (Horizontal Bar - Merge Sort) -->
-            <div class="chart-card flex-2">
-                <div class="chart-header">
-                    <div>
-                        <h4>Sum of Runs by Player Name</h4>
-                        <span class="badge badge-algo">⚡ Powered by Merge Sort (O(n log n))</span>
-                    </div>
-                    <span class="chart-badge-orange">Runs Leaderboard</span>
-                </div>
-                <div class="chart-container" style="height: 320px;">
-                    <canvas id="chartRunsByPlayer"></canvas>
-                </div>
-            </div>
-
-            <!-- Chart 2: Runs vs Strike Rate (Scatter Plot) -->
-            <div class="chart-card flex-2">
-                <div class="chart-header">
-                    <div>
-                        <h4>Runs vs Strike Rate (Impact Scatter)</h4>
-                        <span class="badge badge-algo badge-quicksort">⚡ High-Impact Matrix</span>
-                    </div>
-                    <span class="chart-badge-cyan">Scatter Plot</span>
-                </div>
-                <div class="chart-container" style="height: 320px;">
-                    <canvas id="chartRunsVsSr"></canvas>
-                </div>
-            </div>
-
-            <!-- Chart 3: Sum of 50s and Sum of 100s by Player Name (Stacked Bar) -->
-            <div class="chart-card flex-2">
-                <div class="chart-header">
-                    <div>
-                        <h4>Sum of 50s and Sum of 100s by Player</h4>
-                        <span class="chart-legend-indicator">🔵 50s • 🟣 100s</span>
-                    </div>
-                </div>
-                <div class="chart-container" style="height: 320px;">
-                    <canvas id="chartFiftiesHundreds"></canvas>
-                </div>
-            </div>
-        </div>
-
-        <!-- CHARTS GRID ROW 2 (Matching Image 3) -->
-        <div class="charts-row mt-4">
-            <!-- Chart 4: Sum of 4s and Sum of 6s by Player Name -->
-            <div class="chart-card flex-3">
-                <div class="chart-header">
-                    <div>
-                        <h4>Sum of 4s and Sum of 6s by Player Name</h4>
-                        <span class="chart-legend-indicator">🟦 4s (Boundaries) • 🟪 6s (Maximums)</span>
-                    </div>
-                    <span class="chart-badge-purple">Power Hitting</span>
-                </div>
-                <div class="chart-container" style="height: 300px;">
-                    <canvas id="chartBoundariesByPlayer"></canvas>
-                </div>
-            </div>
-
-            <!-- Chart 5: Sum of Runs / Purse by Team (Donut Ring Chart with Center Text) -->
-            <div class="chart-card flex-2">
-                <div class="chart-header">
-                    <div>
-                        <h4>Sum of Runs by Franchise Team</h4>
-                        <span class="chart-sub">Franchise Distribution</span>
-                    </div>
-                    <span class="chart-badge-gold">Donut Share</span>
-                </div>
-                <div class="chart-container donut-center-container" style="height: 300px; position: relative;">
-                    <canvas id="chartRunsByTeam"></canvas>
-                    <div class="donut-center-metric">
-                        <span class="donut-center-val" id="donut-center-runs">{{ (total_runs // 1000) }}K</span>
-                        <span class="donut-center-label">Total Runs</span>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Team Purse & Live Budget Overview Table (Boss Q10) -->
-        <div class="card mt-4 broadcast-table-card">
-            <div class="card-header">
-                <div>
-                    <h3>💰 Franchise Purse & Budget Tracker (Boss Question 10)</h3>
-                    <p class="card-sub">Real-time team remaining budget, total spent in auction, and squad count.</p>
-                </div>
-                <a href="/teams" class="btn btn-sm btn-outline">Inspect Team Squads →</a>
-            </div>
+        <!-- 10 Franchise Retentions, Purse & RTM Matrix Table -->
+        <div class="matrix-table-card">
             <div class="table-responsive">
                 <table class="data-table">
                     <thead>
                         <tr>
-                            <th>Franchise Code</th>
+                            <th class="text-center">Emblem</th>
                             <th>Franchise Name</th>
-                            <th class="text-right">Total Purse</th>
-                            <th class="text-right">Spent in Auction</th>
-                            <th class="text-right">Remaining Purse</th>
-                            <th class="text-center">Squad Size</th>
+                            <th class="text-center">Retentions (0-6)</th>
+                            <th>Retained Star Players</th>
+                            <th class="text-center">RTM Cards Available</th>
+                            <th class="text-right">Retention Spend</th>
+                            <th class="text-right">Auction Purse Left</th>
+                            <th class="text-center">Squad (Min 18 / Max 25)</th>
+                            <th class="text-center">Overseas (Max 8)</th>
                             <th class="text-center">Action</th>
                         </tr>
                     </thead>
-                    <tbody>
+                    <tbody id="rtm-matrix-body">
                         {% for t in teams %}
                         <tr>
-                            <td>
+                            <td class="text-center">
                                 <span class="team-badge-cell team-bg-{{ t.short_code|lower }}">
                                     {{ t.short_code }}
                                 </span>
                             </td>
-                            <td><strong>{{ t.team_name }}</strong></td>
-                            <td class="text-right">{{ t.total_budget_fmt }}</td>
-                            <td class="text-right color-red font-bold">{{ t.spent_budget_fmt }}</td>
-                            <td class="text-right color-green font-bold">{{ t.remaining_budget_fmt }}</td>
-                            <td class="text-center">{{ t.current_squad_size }} / {{ t.max_squad_size }}</td>
+                            <td>
+                                <strong>{{ t.team_name }}</strong>
+                            </td>
+                            <td class="text-center font-bold">
+                                {{ t.retentions_count }} / 6
+                            </td>
+                            <td>
+                                <span class="text-muted text-sm">{{ t.retained_names or 'None (Enters with 6 RTMs)' }}</span>
+                            </td>
                             <td class="text-center">
-                                <a href="/teams?team={{ t.short_code }}" class="btn btn-xs btn-outline">View Squad</a>
+                                {% if current_mode == 'mega' %}
+                                    {% if t.rtm_cards > 0 %}
+                                        <span class="rtm-tag-pill rtm-active">🃏 {{ t.rtm_cards }} RTM</span>
+                                    {% else %}
+                                        <span class="rtm-tag-pill rtm-zero">0 RTM (Max Retained)</span>
+                                    {% endif %}
+                                {% else %}
+                                    <span class="rtm-tag-pill rtm-disabled">0 (Mini Auction)</span>
+                                {% endif %}
+                            </td>
+                            <td class="text-right color-red font-bold">
+                                {{ t.retention_spend_fmt }}
+                            </td>
+                            <td class="text-right color-green font-bold">
+                                {{ t.remaining_budget_fmt }}
+                            </td>
+                            <td class="text-center">
+                                <span class="font-bold {% if t.total_squad_size >= 18 %}color-green{% else %}color-gold{% endif %}">
+                                    {{ t.total_squad_size }} / 25
+                                </span>
+                                <span class="text-xs text-muted block">(min 18)</span>
+                            </td>
+                            <td class="text-center font-bold {% if t.overseas_count >= 8 %}color-red{% else %}color-blue{% endif %}">
+                                {{ t.overseas_count }} / 8
+                            </td>
+                            <td class="text-center">
+                                <a href="/teams?team={{ t.short_code }}" class="btn btn-outline btn-xs">Inspect Squad →</a>
                             </td>
                         </tr>
                         {% endfor %}
@@ -234,272 +154,253 @@
             </div>
         </div>
     </section>
+
+    <!-- =========================================================================
+         STAGE 2: THE SEQUENTIAL AUCTION SETS HUB
+         ========================================================================= -->
+    <section class="stage-section">
+        <div class="stage-section-header">
+            <div class="stage-title">
+                <span>🔨 STAGE 2: SEQUENTIAL AUCTION SETS (SPECIALIZATION CATEGORIES)</span>
+                <span class="stage-badge">OFFICIAL PRESENTATION ORDER</span>
+            </div>
+            <span class="text-sm text-muted">Order within sets decided by random draw • Auctioneer calls players at base price</span>
+        </div>
+
+        <div class="sets-hub-grid">
+            {% for s in auction_sets %}
+            <div class="set-hub-card">
+                <div class="set-card-top">
+                    <div class="set-card-icon">{{ s.icon }}</div>
+                    <div class="set-card-title-wrap">
+                        <h3>{{ s.name }}</h3>
+                        <span class="set-code-badge">{{ s.code }}</span>
+                    </div>
+                </div>
+
+                <div class="set-card-metrics">
+                    <div class="set-metric-item">
+                        <span>Total</span>
+                        <strong>{{ s.total_count }}</strong>
+                    </div>
+                    <div class="set-metric-item">
+                        <span>Available</span>
+                        <strong class="color-green">{{ s.available_count }}</strong>
+                    </div>
+                    <div class="set-metric-item">
+                        <span>Sold</span>
+                        <strong class="color-gold">{{ s.sold_count }}</strong>
+                    </div>
+                </div>
+
+                <div class="set-card-action">
+                    <a href="/auction?set={{ s.code }}" class="btn btn-primary btn-sm btn-block">
+                        🔨 Enter {{ s.code }} Auction →
+                    </a>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </section>
+
+    <!-- =========================================================================
+         STAGE 3: REGISTERED PLAYER POOL & SHORTLISTING
+         ========================================================================= -->
+    <section class="stage-section">
+        <div class="stage-section-header">
+            <div class="stage-title">
+                <span>👥 STAGE 3: REGISTERED PLAYER POOL & SHORTLISTING</span>
+                <span class="stage-badge">{{ players|length }} PLAYERS REGISTERED</span>
+            </div>
+            <div class="dsa-sort-controls">
+                <a href="/players?sort=runs" class="btn btn-outline btn-xs">⚡ Sort by Runs (Merge Sort)</a>
+                <a href="/players?sort=avg" class="btn btn-outline btn-xs">⚡ Sort by Batting Avg (Quick Sort)</a>
+                <a href="/player/add" class="btn btn-primary btn-xs">+ Register Player</a>
+            </div>
+        </div>
+
+        <!-- Filter Pills Bar -->
+        <div class="filter-pills-bar mb-3">
+            <span class="filter-pills-label">Base Price Tiers:</span>
+            <span class="badge badge-outline">₹2.00 Cr ({{ tiers['2_cr'] }})</span>
+            <span class="badge badge-outline">₹1.50 Cr ({{ tiers['1_5_cr'] }})</span>
+            <span class="badge badge-outline">₹1.00 Cr ({{ tiers['1_cr'] }})</span>
+            <span class="badge badge-outline">₹40 Lakhs Uncapped ({{ tiers['uncapped_40_l'] }})</span>
+        </div>
+
+        <div class="matrix-table-card">
+            <div class="table-responsive">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Player Name</th>
+                            <th>Role & Specialization</th>
+                            <th class="text-center">Set Code</th>
+                            <th class="text-center">Status</th>
+                            <th class="text-center">Former Team (RTM)</th>
+                            <th class="text-right">Base Price</th>
+                            <th class="text-right">Sold Price</th>
+                            <th class="text-center">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for p in players[:12] %}
+                        <tr>
+                            <td>
+                                <strong>{{ p.name }}</strong>
+                                {% if p.is_overseas %}<span class="badge badge-overseas ml-1">✈️ Overseas</span>{% endif %}
+                            </td>
+                            <td>{{ p.role }}</td>
+                            <td class="text-center">
+                                <span class="set-code-badge">{{ p.set_code or 'BA1' }}</span>
+                            </td>
+                            <td class="text-center">
+                                <span class="badge badge-{{ p.status|lower }}">{{ p.status }}</span>
+                            </td>
+                            <td class="text-center">
+                                {% if p.former_team %}
+                                    <span class="team-badge-cell team-bg-{{ p.former_team|lower }}">{{ p.former_team }}</span>
+                                {% else %}
+                                    <span class="text-muted text-xs">—</span>
+                                {% endif %}
+                            </td>
+                            <td class="text-right font-bold">{{ format_currency(p.base_price) }}</td>
+                            <td class="text-right font-bold {% if p.sold_price > 0 %}color-gold{% else %}text-muted{% endif %}">
+                                {{ format_currency(p.sold_price) if p.sold_price > 0 else '—' }}
+                            </td>
+                            <td class="text-center">
+                                <a href="/player/{{ p.player_id }}" class="btn btn-outline btn-xs">Profile</a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            <div class="table-footer-strip p-3 text-center">
+                <a href="/players" class="btn btn-outline btn-sm">View All {{ players|length }} Registered Players →</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- =========================================================================
+         STAGE 4: THE ACCELERATED AUCTION PROCESS
+         ========================================================================= -->
+    <section class="stage-section">
+        <div class="stage-section-header">
+            <div class="stage-title">
+                <span>⚡ STAGE 4: THE ACCELERATED AUCTION PROCESS</span>
+                <span class="stage-badge">POST-MAIN ROUND SPEED UP</span>
+            </div>
+        </div>
+
+        <div class="accelerated-banner-box">
+            <div class="accelerated-info">
+                <h2>⚡ ACCELERATED AUCTION POOL (RAPID FIRE)</h2>
+                <p>
+                    To manage the large list of shortlisted players, not every player undergoes the slow regular sequence.
+                    Once the initial main rounds conclude, franchises submit shortlists of specific unsold or remaining players
+                    they want brought back under the hammer immediately to finalize squads.
+                </p>
+            </div>
+            <div class="accelerated-cta">
+                <a href="/auction?accelerated=1" class="btn btn-hammer btn-lg">
+                    🚀 Start Accelerated Round ({{ unsold_players|length }} Unsold) →
+                </a>
+            </div>
+        </div>
+
+        {% if unsold_players %}
+        <div class="matrix-table-card">
+            <div class="table-responsive">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Player Name</th>
+                            <th>Role</th>
+                            <th class="text-center">Former Team</th>
+                            <th class="text-right">Base Price</th>
+                            <th class="text-center">Accelerated Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for up in unsold_players %}
+                        <tr>
+                            <td><strong>{{ up.name }}</strong></td>
+                            <td>{{ up.role }}</td>
+                            <td class="text-center">
+                                {% if up.former_team %}
+                                    <span class="team-badge-cell team-bg-{{ up.former_team|lower }}">{{ up.former_team }}</span>
+                                {% else %}
+                                    <span class="text-muted text-xs">—</span>
+                                {% endif %}
+                            </td>
+                            <td class="text-right font-bold">{{ format_currency(up.base_price) }}</td>
+                            <td class="text-center">
+                                <button type="button" 
+                                        class="btn btn-primary btn-xs btn-shortlist-acc" 
+                                        data-player-id="{{ up.player_id }}"
+                                        data-player-name="{{ up.name }}">
+                                    ⚡ Add to Accelerated Shortlist
+                                </button>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        {% else %}
+        <div class="empty-state-card text-center p-4">
+            <p class="text-muted">No players currently marked as Unsold. All players are either available in main sets or sold!</p>
+        </div>
+        {% endif %}
+    </section>
 </div>
 
-<!-- Safe JSON Data Payloads for Dynamic Client-Side Filtering -->
-<script type="application/json" id="data-raw-players">{{ players_json|safe }}</script>
-<script type="application/json" id="data-raw-teams">{{ teams_json|safe }}</script>
+<!-- Safe Data Storage in HTML5 Templates (Zero VS Code JS Syntax Errors) -->
+<template id="tmpl-mode">{{ current_mode }}</template>
 
 <script>
-const RAW_PLAYERS = JSON.parse(document.getElementById('data-raw-players').textContent);
-const RAW_TEAMS = JSON.parse(document.getElementById('data-raw-teams').textContent);
+// Mode Switcher: Mega Auction vs Mini Auction
+document.getElementById('btn-mode-mega')?.addEventListener('click', () => switchAuctionMode('mega'));
+document.getElementById('btn-mode-mini')?.addEventListener('click', () => switchAuctionMode('mini'));
 
-// Chart instances
-let chartRunsByPlayerInstance = null;
-let chartRunsVsSrInstance = null;
-let chartFiftiesHundredsInstance = null;
-let chartBoundariesInstance = null;
-let chartRunsByTeamInstance = null;
-
-// Team Colors Map
-const TEAM_COLORS = {
-    'CSK': '#FDB913',
-    'MI': '#004BA0',
-    'RCB': '#EC1C24',
-    'KKR': '#3A225D',
-    'RR': '#EA1A85',
-    'SRH': '#F26522',
-    'GT': '#0B4973',
-    'LSG': '#0055A5',
-    'DC': '#004C93',
-    'PBKS': '#DD1F2D'
-};
-
-function getActiveTeams() {
-    const chks = document.querySelectorAll('input[name="team_filter"]:checked');
-    return Array.from(chks).map(c => c.value);
+async function switchAuctionMode(mode) {
+    try {
+        const res = await fetch('/api/auction/mode', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ mode: mode })
+        });
+        const data = await res.json();
+        if (data.success) {
+            window.location.reload();
+        }
+    } catch (err) {
+        alert('Error changing auction mode: ' + err);
+    }
 }
 
-function filterData() {
-    const activeTeams = getActiveTeams();
-    const selectedPlayer = document.getElementById('player-select').value;
-
-    return RAW_PLAYERS.filter(p => {
-        // If player has a team, check if that team is active; if unassigned, allow
-        const teamMatch = !p.team_code || activeTeams.includes(p.team_code);
-        const playerMatch = (selectedPlayer === 'ALL') || (p.name === selectedPlayer);
-        return teamMatch && playerMatch;
-    });
-}
-
-function updateKPIs(filtered) {
-    const totalRuns = filtered.reduce((acc, p) => acc + (p.runs || 0), 0);
-    const totalFours = filtered.reduce((acc, p) => acc + (p.fours || 0), 0);
-    const totalSixes = filtered.reduce((acc, p) => acc + (p.sixes || 0), 0);
-    const validSR = filtered.filter(p => (p.strike_rate || 0) > 0);
-    const avgSR = validSR.length ? (validSR.reduce((acc, p) => acc + p.strike_rate, 0) / validSR.length) : 0;
-
-    document.getElementById('kpi-runs').innerText = totalRuns.toLocaleString();
-    document.getElementById('kpi-fours').innerText = totalFours.toLocaleString();
-    document.getElementById('kpi-sixes').innerText = totalSixes.toLocaleString();
-    document.getElementById('kpi-sr').innerText = avgSR.toFixed(2);
-    document.getElementById('donut-center-runs').innerText = Math.round(totalRuns / 1000) + 'K';
-}
-
-function renderAllCharts() {
-    const filtered = filterData();
-    updateKPIs(filtered);
-
-    // 1. Horizontal Bar: Sum of Runs by Player Name (Top 10 sorted)
-    const sortedByRuns = [...filtered].sort((a, b) => b.runs - a.runs).slice(0, 10);
-    const runsLabels = sortedByRuns.map(p => p.name);
-    const runsData = sortedByRuns.map(p => p.runs);
-
-    if (chartRunsByPlayerInstance) chartRunsByPlayerInstance.destroy();
-    const ctx1 = document.getElementById('chartRunsByPlayer').getContext('2d');
-    chartRunsByPlayerInstance = new Chart(ctx1, {
-        type: 'bar',
-        data: {
-            labels: runsLabels,
-            datasets: [{
-                label: 'Runs',
-                data: runsData,
-                backgroundColor: 'rgba(245, 158, 11, 0.85)',
-                borderColor: '#f59e0b',
-                borderWidth: 1,
-                borderRadius: 4
-            }]
-        },
-        options: {
-            indexAxis: 'y',
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: { legend: { display: false } },
-            scales: {
-                x: { grid: { color: '#1e293b' }, ticks: { color: '#94a3b8' } },
-                y: { grid: { display: false }, ticks: { color: '#f8fafc', font: { weight: 'bold' } } }
+// Add player to Accelerated Shortlist
+document.querySelectorAll('.btn-shortlist-acc').forEach(btn => {
+    btn.addEventListener('click', async function() {
+        const playerId = this.getAttribute('data-player-id');
+        const playerName = this.getAttribute('data-player-name');
+        try {
+            const res = await fetch('/api/auction/shortlist_accelerated', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ player_id: parseInt(playerId) })
+            });
+            const data = await res.json();
+            if (data.success) {
+                alert(`Player '${playerName}' added to Accelerated Auction Round!`);
+                window.location.reload();
             }
+        } catch (e) {
+            alert('Error adding to accelerated shortlist: ' + e);
         }
     });
-
-    // 2. Scatter Plot: Runs vs Strike Rate
-    const scatterData = filtered.filter(p => p.runs > 200).map(p => ({
-        x: p.runs,
-        y: p.strike_rate,
-        player: p.name
-    }));
-
-    if (chartRunsVsSrInstance) chartRunsVsSrInstance.destroy();
-    const ctx2 = document.getElementById('chartRunsVsSr').getContext('2d');
-    chartRunsVsSrInstance = new Chart(ctx2, {
-        type: 'scatter',
-        data: {
-            datasets: [{
-                label: 'Players',
-                data: scatterData,
-                backgroundColor: '#38bdf8',
-                borderColor: '#0284c7',
-                borderWidth: 1,
-                pointRadius: 6,
-                pointHoverRadius: 9
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: { display: false },
-                tooltip: {
-                    callbacks: {
-                        label: function(ctx) {
-                            const raw = ctx.raw;
-                            return `${raw.player}: ${raw.x} Runs @ ${raw.y.toFixed(1)} SR`;
-                        }
-                    }
-                }
-            },
-            scales: {
-                x: { title: { display: true, text: 'Runs', color: '#94a3b8' }, grid: { color: '#1e293b' }, ticks: { color: '#94a3b8' } },
-                y: { title: { display: true, text: 'Strike Rate', color: '#94a3b8' }, grid: { color: '#1e293b' }, ticks: { color: '#94a3b8' } }
-            }
-        }
-    });
-
-    // 3. Stacked Bar: 50s and 100s
-    const topMilestones = [...filtered].sort((a, b) => (b.centuries * 2 + b.fifties) - (a.centuries * 2 + a.fifties)).slice(0, 10);
-    if (chartFiftiesHundredsInstance) chartFiftiesHundredsInstance.destroy();
-    const ctx3 = document.getElementById('chartFiftiesHundreds').getContext('2d');
-    chartFiftiesHundredsInstance = new Chart(ctx3, {
-        type: 'bar',
-        data: {
-            labels: topMilestones.map(p => p.name),
-            datasets: [
-                {
-                    label: '50s',
-                    data: topMilestones.map(p => p.fifties),
-                    backgroundColor: '#2563eb'
-                },
-                {
-                    label: '100s',
-                    data: topMilestones.map(p => p.centuries),
-                    backgroundColor: '#9333ea'
-                }
-            ]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: { legend: { display: false } },
-            scales: {
-                x: { stacked: true, grid: { display: false }, ticks: { color: '#94a3b8', maxRotation: 45 } },
-                y: { stacked: true, grid: { color: '#1e293b' }, ticks: { color: '#94a3b8' } }
-            }
-        }
-    });
-
-    // 4. Stacked Bar: 4s and 6s
-    const topBoundaries = [...filtered].sort((a, b) => (b.fours + b.sixes) - (a.fours + a.sixes)).slice(0, 10);
-    if (chartBoundariesInstance) chartBoundariesInstance.destroy();
-    const ctx4 = document.getElementById('chartBoundariesByPlayer').getContext('2d');
-    chartBoundariesInstance = new Chart(ctx4, {
-        type: 'bar',
-        data: {
-            labels: topBoundaries.map(p => p.name),
-            datasets: [
-                {
-                    label: '4s',
-                    data: topBoundaries.map(p => p.fours),
-                    backgroundColor: '#0284c7'
-                },
-                {
-                    label: '6s',
-                    data: topBoundaries.map(p => p.sixes),
-                    backgroundColor: '#a855f7'
-                }
-            ]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: { legend: { display: false } },
-            scales: {
-                x: { stacked: true, grid: { display: false }, ticks: { color: '#94a3b8', maxRotation: 45 } },
-                y: { stacked: true, grid: { color: '#1e293b' }, ticks: { color: '#94a3b8' } }
-            }
-        }
-    });
-
-    // 5. Donut Chart: Runs by Team
-    const teamRunsMap = {};
-    RAW_TEAMS.forEach(t => teamRunsMap[t.short_code] = 0);
-    RAW_PLAYERS.forEach(p => {
-        if (p.team_code && teamRunsMap[p.team_code] !== undefined) {
-            teamRunsMap[p.team_code] += (p.runs || 0);
-        } else {
-            // Distribute general pool for realistic share
-            const fakeCode = RAW_TEAMS[p.player_id % RAW_TEAMS.length].short_code;
-            teamRunsMap[fakeCode] += (p.runs || 0);
-        }
-    });
-
-    const activeTeamsList = getActiveTeams();
-    const donutLabels = activeTeamsList;
-    const donutData = activeTeamsList.map(code => teamRunsMap[code] || 100);
-    const donutColors = activeTeamsList.map(code => TEAM_COLORS[code] || '#38bdf8');
-
-    if (chartRunsByTeamInstance) chartRunsByTeamInstance.destroy();
-    const ctx5 = document.getElementById('chartRunsByTeam').getContext('2d');
-    chartRunsByTeamInstance = new Chart(ctx5, {
-        type: 'doughnut',
-        data: {
-            labels: donutLabels,
-            datasets: [{
-                data: donutData,
-                backgroundColor: donutColors,
-                borderWidth: 2,
-                borderColor: '#0b1120'
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            cutout: '72%',
-            plugins: {
-                legend: { position: 'right', labels: { color: '#94a3b8', boxWidth: 12 } }
-            }
-        }
-    });
-}
-
-// Event Listeners for Dynamic Real-Time Filtering
-document.querySelectorAll('input[name="team_filter"]').forEach(chk => {
-    chk.addEventListener('change', renderAllCharts);
 });
-
-document.getElementById('player-select').addEventListener('change', renderAllCharts);
-
-document.getElementById('btn-clear-filters').addEventListener('click', () => {
-    document.querySelectorAll('input[name="team_filter"]').forEach(c => c.checked = false);
-    document.getElementById('player-select').value = 'ALL';
-    renderAllCharts();
-});
-
-document.getElementById('btn-select-all-teams').addEventListener('click', () => {
-    document.querySelectorAll('input[name="team_filter"]').forEach(c => c.checked = true);
-    renderAllCharts();
-});
-
-// Initialize on Load
-window.addEventListener('DOMContentLoaded', renderAllCharts);
 </script>
 {% endblock %}

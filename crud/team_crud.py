@@ -16,7 +16,7 @@ from config import format_currency
 
 
 def read_all_teams() -> List[Dict[str, Any]]:
-    """Fetches all 10 IPL franchises with their current purse and squad count."""
+    """Fetches all 10 IPL franchises with their purse, retentions, RTM cards, and squad counts."""
     conn = get_connection()
     cursor = conn.cursor()
 
@@ -30,10 +30,17 @@ def read_all_teams() -> List[Dict[str, Any]]:
         t.total_budget,
         t.remaining_budget,
         (t.total_budget - t.remaining_budget) AS spent_budget,
+        t.retention_spend,
+        t.retentions_count,
+        t.rtm_cards,
+        t.retained_names,
+        t.min_squad_size,
         t.max_squad_size,
-        COUNT(p.player_id) AS current_squad_size
+        t.max_overseas,
+        COUNT(p.player_id) AS current_squad_size,
+        SUM(CASE WHEN p.is_overseas = 1 THEN 1 ELSE 0 END) AS overseas_count
     FROM teams t
-    LEFT JOIN players p ON t.team_id = p.team_id
+    LEFT JOIN players p ON t.team_id = p.team_id AND p.status = 'Sold'
     GROUP BY t.team_id
     ORDER BY t.team_id ASC;
     """
@@ -44,9 +51,16 @@ def read_all_teams() -> List[Dict[str, Any]]:
     teams: List[Dict[str, Any]] = []
     for r in rows:
         d = row_to_dict(r)
+        d["overseas_count"] = d.get("overseas_count") or 0
+        d["total_squad_size"] = d["current_squad_size"] + (d.get("retentions_count") or 0)
+        d["is_squad_full"] = d["total_squad_size"] >= d["max_squad_size"]
+        d["is_min_squad_met"] = d["total_squad_size"] >= d["min_squad_size"]
+        d["is_overseas_full"] = d["overseas_count"] >= d["max_overseas"]
+
         d["total_budget_fmt"] = format_currency(d["total_budget"])
         d["remaining_budget_fmt"] = format_currency(d["remaining_budget"])
         d["spent_budget_fmt"] = format_currency(d["spent_budget"])
+        d["retention_spend_fmt"] = format_currency(d.get("retention_spend", 0.0))
         teams.append(d)
 
     return teams

@@ -1,10 +1,22 @@
 """
 Real IPL Auction Simulation Engine
 Features:
-- Live franchise bidding simulation with realistic purse constraints
-- Auctioneer gavel knockdowns ("Going once, going twice, SOLD!")
-- Database state updates (Status, Sold Price, Foreign Key team_id, Purse deductions)
-- Records every bid into 'auction_bids' table for full audit trail
+- Official Mega Auction vs Mini Auction Modes:
+  - Mega Auction: Teams receive RTM cards based on retentions (6 - Retained Count)
+  - Mini Auction: 0 RTM cards (RTM cannot be used in a Mini Auction)
+- Sequential Categorized Sets:
+  - Set 1: Capped Batters (BA1)
+  - Set 2: Capped All-rounders (AL1)
+  - Set 3: Capped Wicketkeepers (WK1)
+  - Set 4: Capped Fast Bowlers (FA1)
+  - Set 5: Capped Spinners (SP1)
+  - Set 6: Uncapped Players (UN1)
+- Official Bidding Increment Slabs (<₹1 Cr: +10L, 1-2Cr: +20L, 2-5Cr: +25L, 5-10Cr: +50L, >10Cr: +1Cr)
+- Right-To-Match (RTM) Card Challenge Protocol:
+  - Prompts former franchise before hammer knockdown
+  - Winning bidder gets one final raise, former team can match to retain
+- Accelerated Auction Round for Shortlisted Unsold Players
+- Strict Squad & Purse Constraints (₹120 Cr purse, 18-25 squad size, max 8 overseas)
 """
 
 import time
@@ -25,20 +37,92 @@ from supabase_sync import (
     sync_reset_auction,
 )
 
+# Current Auction Mode ("mega" or "mini")
+CURRENT_AUCTION_MODE = "mega"
 
 
-def get_available_players_pool() -> List[Dict[str, Any]]:
-    """Fetches all players currently marked 'Available' in the auction pool."""
+def get_auction_mode() -> str:
+    """Returns 'mega' or 'mini'."""
+    return CURRENT_AUCTION_MODE
+
+
+def set_auction_mode(mode: str) -> str:
+    """
+    Sets the auction mode ('mega' or 'mini') and updates franchise RTM cards:
+    - Mega Auction: RTM Cards = max(0, 6 - retentions_count)
+    - Mini Auction: RTM Cards = 0 (RTM cards cannot be used in Mini Auction)
+    """
+    global CURRENT_AUCTION_MODE
+    clean_mode = "mini" if mode.strip().lower() == "mini" else "mega"
+    CURRENT_AUCTION_MODE = clean_mode
+
+    conn = get_connection()
+    cursor = conn.cursor()
+
+    if clean_mode == "mini":
+        cursor.execute("UPDATE teams SET rtm_cards = 0;")
+    else:
+        cursor.execute("UPDATE teams SET rtm_cards = MAX(0, 6 - retentions_count);")
+
+    conn.commit()
+    conn.close()
+    return CURRENT_AUCTION_MODE
+
+
+def get_available_players_pool(
+    set_code: Optional[str] = None,
+    accelerated_only: bool = False
+) -> List[Dict[str, Any]]:
+    """
+    Fetches players in the auction pool, optionally filtered by Set or Accelerated round.
+    """
+    conn = get_connection()
+    cursor = conn.cursor()
+
+    query = """
+    SELECT 
+        p.player_id, p.name, p.role, p.country, p.base_price, p.sold_price, p.status,
+        p.set_name, p.set_code, p.is_capped, p.is_overseas, p.former_team,
+        p.is_shortlisted, p.accelerated,
+        s.matches, s.runs, s.highest_score, s.batting_avg, s.strike_rate,
+        s.wickets, s.bowling_economy
+    FROM players p
+    JOIN player_stats s ON p.player_id = s.player_id
+    WHERE 1=1
+    """
+    params = []
+
+    if accelerated_only:
+        query += " AND (p.accelerated = 1 OR p.status = 'Unsold')"
+    else:
+        query += " AND p.status = 'Available' AND p.is_shortlisted = 1"
+
+    if set_code and set_code != "ALL" and not accelerated_only:
+        query += " AND p.set_code = ?"
+        params.append(set_code)
+
+    query += " ORDER BY p.player_id ASC;"
+
+    cursor.execute(query, tuple(params))
+    rows = cursor.fetchall()
+    conn.close()
+    return [row_to_dict(r) for r in rows]
+
+
+def get_unsold_players_pool() -> List[Dict[str, Any]]:
+    """Fetches all players currently marked 'Unsold' eligible for the Accelerated Round."""
     conn = get_connection()
     cursor = conn.cursor()
     cursor.execute("""
     SELECT 
         p.player_id, p.name, p.role, p.country, p.base_price, p.status,
+        p.set_name, p.set_code, p.is_capped, p.is_overseas, p.former_team,
+        p.is_shortlisted, p.accelerated,
         s.matches, s.runs, s.highest_score, s.batting_avg, s.strike_rate,
         s.wickets, s.bowling_economy
     FROM players p
     JOIN player_stats s ON p.player_id = s.player_id
-    WHERE p.status = 'Available'
+    WHERE p.status = 'Unsold'
     ORDER BY p.player_id ASC;
     """)
     rows = cursor.fetchall()
@@ -46,8 +130,75 @@ def get_available_players_pool() -> List[Dict[str, Any]]:
     return [row_to_dict(r) for r in rows]
 
 
+def add_to_accelerated_shortlist(player_id: int) -> bool:
+    """Marks an unsold player to be brought back in the accelerated round."""
+    conn = get_connection()
+    cursor = conn.cursor()
+    try:
+        cursor.execute("UPDATE players SET accelerated = 1, status = 'Available' WHERE player_id = ?;", (player_id,))
+        conn.commit()
+        return True
+    except Exception:
+        return False
+    finally:
+        conn.close()
+
+
+def get_auction_sets() -> List[Dict[str, Any]]:
+    """
+    Summarizes the 6 official sequential sets with their player counts and progress.
+    """
+    conn = get_connection()
+    cursor = conn.cursor()
+
+    set_definitions = [
+        {"code": "BA1", "name": "Set 1: Capped Batters (BA1)", "role": "Batsman", "icon": "🏏"},
+        {"code": "AL1", "name": "Set 2: Capped All-rounders (AL1)", "role": "Allrounder", "icon": "🔥"},
+        {"code": "WK1", "name": "Set 3: Capped Wicketkeepers (WK1)", "role": "Wicketkeeper", "icon": "🧤"},
+        {"code": "FA1", "name": "Set 4: Capped Fast Bowlers (FA1)", "role": "Bowler", "icon": "⚡"},
+        {"code": "SP1", "name": "Set 5: Capped Spinners (SP1)", "role": "Bowler", "icon": "🌀"},
+        {"code": "UN1", "name": "Set 6: Uncapped Players (UN1)", "role": "Uncapped", "icon": "🌟"},
+    ]
+
+    sets_data = []
+    for s in set_definitions:
+        cursor.execute("SELECT COUNT(*) FROM players WHERE set_code = ?;", (s["code"],))
+        total = cursor.fetchone()[0]
+
+        cursor.execute("SELECT COUNT(*) FROM players WHERE set_code = ? AND status = 'Available';", (s["code"],))
+        available = cursor.fetchone()[0]
+
+        cursor.execute("SELECT COUNT(*) FROM players WHERE set_code = ? AND status = 'Sold';", (s["code"],))
+        sold = cursor.fetchone()[0]
+
+        cursor.execute("SELECT COUNT(*) FROM players WHERE set_code = ? AND status = 'Unsold';", (s["code"],))
+        unsold = cursor.fetchone()[0]
+
+        sets_data.append({
+            "code": s["code"],
+            "name": s["name"],
+            "role": s["role"],
+            "icon": s["icon"],
+            "total": total,
+            "available": available,
+            "sold": sold,
+            "unsold": unsold,
+            "is_completed": available == 0 and total > 0
+        })
+
+    conn.close()
+    return sets_data
+
+
 def get_bid_increment(current_bid: float) -> float:
-    """Calculates official IPL style bidding slab increments."""
+    """
+    Calculates official IPL style bidding slab increments:
+    - Under ₹1 Cr: + ₹10 Lakhs
+    - ₹1 Cr – ₹2 Cr: + ₹20 Lakhs
+    - ₹2 Cr – ₹5 Cr: + ₹25 Lakhs
+    - ₹5 Cr – ₹10 Cr: + ₹50 Lakhs
+    - Above ₹10 Cr: + ₹1 Crore
+    """
     if current_bid < 10_000_000:       # Under 1 Cr
         return 1_000_000               # + 10 Lakhs
     elif current_bid < 20_000_000:     # 1 Cr - 2 Cr
@@ -58,6 +209,108 @@ def get_bid_increment(current_bid: float) -> float:
         return 5_000_000               # + 50 Lakhs
     else:                              # Above 10 Cr
         return 10_000_000              # + 1 Crore
+
+
+def validate_team_bid(team: Dict[str, Any], player: Dict[str, Any], bid_amount: float) -> Tuple[bool, str]:
+    """
+    Enforces official IPL Purse & Squad Limits:
+    1. Budget must cover bid amount
+    2. Squad maximum cap: 25 players
+    3. Overseas maximum cap: 8 overseas players
+    4. Minimum reserve purse: must retain enough funds to fill up to min 18 players
+    """
+    # 1. Budget check
+    if team["remaining_budget"] < bid_amount:
+        return (False, f"Insufficient purse (Needs {format_currency(bid_amount)}, Has {format_currency(team['remaining_budget'])})")
+
+    # 2. Maximum Squad check (25 players)
+    total_squad = team.get("total_squad_size", team.get("current_squad_size", 0))
+    if total_squad >= team.get("max_squad_size", 25):
+        return (False, f"Squad size reached maximum cap of {team.get('max_squad_size', 25)} players")
+
+    # 3. Maximum Overseas check (8 players)
+    is_overseas = player.get("is_overseas") or (player.get("country", "India") != "India")
+    if is_overseas and team.get("overseas_count", 0) >= team.get("max_overseas", 8):
+        return (False, f"Overseas quota full (Already {team.get('max_overseas', 8)}/8 overseas players)")
+
+    # 4. Minimum Reserve Purse for 18 players (reserve ₹30L per unfilled spot)
+    needed_slots = max(0, team.get("min_squad_size", 18) - (total_squad + 1))
+    required_reserve = needed_slots * 3_000_000  # ₹30 Lakhs base price buffer
+    if (team["remaining_budget"] - bid_amount) < required_reserve:
+        return (False, f"Must preserve {format_currency(required_reserve)} to reach minimum squad of 18 players")
+
+    return (True, "Valid bid")
+
+
+def check_rtm_eligibility(
+    player_id: int,
+    winning_team_id: int
+) -> Tuple[bool, Optional[Dict[str, Any]], str]:
+    """
+    Checks if former franchise can invoke a Right-To-Match (RTM) Card:
+    - Rule 1: Mega Auction only (Mini Auction forbids RTM)
+    - Rule 2: Player must have a registered former IPL team
+    - Rule 3: Winning bidder cannot be the player's former team
+    - Rule 4: Former team must have RTM cards > 0
+    - Rule 5: Former team must satisfy squad and purse limits
+    """
+    if CURRENT_AUCTION_MODE != "mega":
+        return (False, None, "RTM cards cannot be used in a Mini Auction")
+
+    conn = get_connection()
+    cursor = conn.cursor()
+
+    cursor.execute("SELECT * FROM players WHERE player_id = ?;", (player_id,))
+    p_row = cursor.fetchone()
+    if not p_row:
+        conn.close()
+        return (False, None, "Player not found")
+
+    player = row_to_dict(p_row)
+    former_code = player.get("former_team")
+    if not former_code:
+        conn.close()
+        return (False, None, "Player has no registered former IPL franchise")
+
+    cursor.execute("SELECT * FROM teams WHERE UPPER(short_code) = ?;", (former_code.strip().upper(),))
+    t_row = cursor.fetchone()
+    conn.close()
+
+    if not t_row:
+        return (False, None, f"Former franchise {former_code} not found")
+
+    former_team = row_to_dict(t_row)
+    if former_team["team_id"] == winning_team_id:
+        return (False, former_team, "Winning bidder is already player's former team")
+
+    if former_team.get("rtm_cards", 0) <= 0:
+        return (False, former_team, f"{former_team['short_code']} has 0 RTM cards remaining")
+
+    return (True, former_team, f"{former_team['team_name']} ({former_team['short_code']}) can exercise RTM Card!")
+
+
+def execute_rtm_claim(player_id: int, former_team_id: int, final_price: float) -> bool:
+    """
+    Deducts 1 RTM card from former team, then records winning bid transaction.
+    """
+    conn = get_connection()
+    cursor = conn.cursor()
+    try:
+        cursor.execute("""
+        UPDATE teams 
+        SET rtm_cards = MAX(0, rtm_cards - 1) 
+        WHERE team_id = ?;
+        """, (former_team_id,))
+        conn.commit()
+    except Exception as e:
+        conn.rollback()
+        conn.close()
+        return False
+    finally:
+        conn.close()
+
+    # Record winning bid under former team
+    return record_winning_bid(player_id, former_team_id, final_price)
 
 
 def record_winning_bid(player_id: int, team_id: int, sold_price: float) -> bool:
@@ -165,13 +418,19 @@ def mark_player_unsold(player_id: int) -> bool:
 
 
 def reset_entire_auction() -> bool:
-    """Resets all players to 'Available', clears bids, restores ₹120 Cr, and clears team tables."""
+    """Resets all players to 'Available', clears bids, restores budgets, and resets RTM counts."""
     conn = get_connection()
     cursor = conn.cursor()
     try:
         cursor.execute("DELETE FROM auction_bids;")
-        cursor.execute("UPDATE players SET status = 'Available', sold_price = 0.0, team_id = NULL;")
-        cursor.execute("UPDATE teams SET remaining_budget = total_budget;")
+        cursor.execute("UPDATE players SET status = 'Available', sold_price = 0.0, team_id = NULL, accelerated = 0;")
+
+        # Restore budgets based on retentions
+        cursor.execute("""
+        UPDATE teams 
+        SET remaining_budget = total_budget - retention_spend,
+            rtm_cards = CASE WHEN ? = 'mini' THEN 0 ELSE MAX(0, 6 - retentions_count) END;
+        """, (CURRENT_AUCTION_MODE,))
         conn.commit()
 
         # Clear all dedicated franchise squad tables
@@ -216,86 +475,79 @@ def get_auction_stats() -> Dict[str, Any]:
         "available": available_count,
         "total_spent": total_spent,
         "total_spent_fmt": format_currency(total_spent),
+        "mode": CURRENT_AUCTION_MODE
     }
 
 
 def run_player_auction(
     player: Dict[str, Any],
-    user_team_id: Optional[int] = None,
     interactive_callback=None
-) -> Tuple[str, Optional[Dict[str, Any]], float]:
+) -> Tuple[str, Optional[Dict[str, Any]], float, Optional[Dict[str, Any]]]:
     """
-    Simulates a live bidding battle for a player.
-    
-    Parameters:
-        player (dict): Player dictionary.
-        user_team_id (int, optional): If user controls a team.
-        interactive_callback: Optional callable for step-by-step UI updates.
-        
-    Returns:
-        (status, winning_team, final_price)
+    Simulates a live bidding battle with official increments and RTM check:
+    Returns (status, winning_team, final_price, rtm_eligible_team)
     """
     teams = read_all_teams()
     base_price = float(player.get("base_price", 20_000_000))
     current_bid = base_price
     highest_bidder = None
 
-    # Filter teams that have enough purse to at least place base price
-    eligible_teams = [
-        t for t in teams 
-        if t["remaining_budget"] >= current_bid and t["current_squad_size"] < t["max_squad_size"]
-    ]
+    # Filter teams that satisfy budget and squad limits
+    eligible_teams = []
+    for t in teams:
+        can_bid, _ = validate_team_bid(t, player, current_bid)
+        if can_bid:
+            eligible_teams.append(t)
 
     if not eligible_teams:
         mark_player_unsold(player["player_id"])
-        return ("Unsold", None, 0.0)
+        return ("Unsold", None, 0.0, None)
 
-    # Determine bidding interest based on player quality & roles
-    # Elite players (runs > 4000 or wickets > 100 or SR > 150) spark bidding wars
+    # Star factor calculation
     runs = player.get("runs", 0)
     wickets = player.get("wickets", 0)
     sr = player.get("strike_rate", 120.0)
     is_marquee = (runs >= 4000) or (wickets >= 100) or (sr >= 150)
 
-    # Max price cap simulation
-    if is_marquee:
-        price_multiplier = random.uniform(3.5, 9.5)
-    else:
-        price_multiplier = random.uniform(1.2, 3.2)
-
+    price_multiplier = random.uniform(3.0, 7.5) if is_marquee else random.uniform(1.1, 2.8)
     target_ceiling = base_price * price_multiplier
 
-    # Pick 2 to 4 teams to enter bidding war
-    num_bidders = min(len(eligible_teams), random.randint(2, 5))
+    num_bidders = min(len(eligible_teams), random.randint(2, 4))
     bidding_teams = random.sample(eligible_teams, num_bidders)
 
     turn = 0
-    while current_bid < target_ceiling:
+    while current_bid < target_ceiling and len(bidding_teams) > 1:
         bidder = bidding_teams[turn % len(bidding_teams)]
         increment = get_bid_increment(current_bid)
         next_bid = current_bid + increment
 
-        if bidder["remaining_budget"] >= next_bid:
+        can_bid, _ = validate_team_bid(bidder, player, next_bid)
+        if can_bid:
             current_bid = next_bid
             highest_bidder = bidder
             if interactive_callback:
                 interactive_callback(bidder, current_bid)
         else:
-            # Team drops out due to budget
             bidding_teams.remove(bidder)
-            if len(bidding_teams) <= 1:
-                break
 
         turn += 1
-        if len(bidding_teams) == 0:
-            break
 
     if highest_bidder is None:
-        # Check if at least one team takes at base price
-        buyer = random.choice(eligible_teams)
-        highest_bidder = buyer
+        highest_bidder = random.choice(eligible_teams)
         current_bid = base_price
 
-    # Record winning bid in database
+    # Check RTM challenge
+    rtm_eligible, former_team, _ = check_rtm_eligibility(player["player_id"], highest_bidder["team_id"])
+    rtm_info = former_team if rtm_eligible else None
+
+    # If RTM is eligible and former team has RTM cards and random choice decides to match:
+    # 40% chance former team exercises RTM
+    if rtm_eligible and former_team and random.random() < 0.40:
+        can_match, _ = validate_team_bid(former_team, player, current_bid)
+        if can_match:
+            execute_rtm_claim(player["player_id"], former_team["team_id"], current_bid)
+            return ("Sold", former_team, current_bid, former_team)
+
+    # Standard sale to highest bidder
     record_winning_bid(player["player_id"], highest_bidder["team_id"], current_bid)
-    return ("Sold", highest_bidder, current_bid)
+    return ("Sold", highest_bidder, current_bid, None)

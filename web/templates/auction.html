@@ -1,16 +1,24 @@
 {% extends "base.html" %}
 
-{% block title %}TATA IPL 2026 Mega Auction Arena{% endblock %}
+{% block title %}TATA IPL 2026 Live Auction Arena{% endblock %}
 
 {% block content %}
 <div class="auction-arena-wrapper">
-    <!-- TOP STAGE HEADER WITH TROPHY & STAGE STATS (Matching Image 4) -->
+    <!-- TOP STAGE HEADER WITH TROPHY & STAGE STATS -->
     <div class="arena-stage-header">
         <div class="stage-branding">
             <div class="trophy-emblem">🏆</div>
             <div>
-                <h1 class="arena-title">TATA IPL 2026 MEGA AUCTION ARENA</h1>
-                <p class="arena-sub">Official Broadcast Stage • Mallika Sagar at the Podium</p>
+                <h1 class="arena-title">TATA IPL 2026 LIVE AUCTION ARENA</h1>
+                <p class="arena-sub">
+                    Official Broadcast Stage • Mallika Sagar at the Podium • 
+                    <span class="badge {% if current_mode == 'mega' %}badge-success{% else %}badge-warning{% endif %}">
+                        {% if current_mode == 'mega' %}⭐ MEGA AUCTION (RTM ACTIVE){% else %}⚡ MINI AUCTION (0 RTM CARDS){% endif %}
+                    </span>
+                    {% if is_accelerated %}
+                        <span class="badge badge-danger ml-1">⚡ ACCELERATED ROUND ACTIVE</span>
+                    {% endif %}
+                </p>
             </div>
         </div>
 
@@ -27,17 +35,33 @@
                 <span class="pill-label">Total Spend</span>
                 <span class="pill-val color-gold" id="stat-spent-val">{{ stats.total_spent_fmt }}</span>
             </div>
-            <form action="/api/auction/reset" method="POST" onsubmit="return confirm('Reset all teams back to ₹120 Cr and restore player pool?');" style="display:inline;">
+            <form action="/api/auction/reset" method="POST" onsubmit="return confirm('Reset all teams back to ₹120 Cr and restore player pool?');" class="inline-form">
                 <button type="submit" class="btn btn-xs btn-outline">🔄 Reset Auction</button>
             </form>
         </div>
     </div>
 
-    <!-- MAIN ARENA STAGE (Matching Image 2: 3D Drone Pod & Image 4: Auctioneer Board) -->
+    <!-- SEQUENTIAL SETS FILTER NAVIGATION STRIP -->
+    <div class="auction-set-nav-strip mb-4">
+        <span class="set-nav-label">Select Auction Set:</span>
+        <a href="/auction?set=ALL" class="set-nav-pill {% if active_set == 'ALL' and not is_accelerated %}active-pill{% endif %}">
+            All Available ({{ stats.available }})
+        </a>
+        {% for s in auction_sets %}
+        <a href="/auction?set={{ s.code }}" class="set-nav-pill {% if active_set == s.code and not is_accelerated %}active-pill{% endif %}">
+            {{ s.icon }} {{ s.code }} ({{ s.available_count }})
+        </a>
+        {% endfor %}
+        <a href="/auction?accelerated=1" class="set-nav-pill pill-accelerated {% if is_accelerated %}active-pill{% endif %}">
+            ⚡ Accelerated Pool
+        </a>
+    </div>
+
+    <!-- MAIN ARENA STAGE (3D Drone Pod & Auctioneer Podium) -->
     <div class="arena-center-stage">
         {% if pool %}
         {% set p = pool[0] %}
-        <!-- 3D HIGH-TECH GOLDEN DRONE POD (Matching Image 2) -->
+        <!-- 3D HIGH-TECH GOLDEN DRONE POD -->
         <div class="drone-pod-container" id="drone-pod">
             <!-- Top Golden Ring Thruster -->
             <div class="pod-thrusters-top">
@@ -50,7 +74,9 @@
                 <div class="pod-frame-gold">
                     <div class="pod-inner-hologram">
                         <!-- Hologram Header -->
-                        <div class="pod-tagline">TATA IPL AUCTION 2026 • SET 1 MARQUEE</div>
+                        <div class="pod-tagline">
+                            TATA IPL AUCTION 2026 • {{ p.set_name or 'SET 1 MARQUEE' }}
+                        </div>
                         
                         <!-- Player Photo & Avatar -->
                         <div class="player-avatar-circle">
@@ -63,6 +89,16 @@
                             <span class="meta-role" id="pod-role">{{ p.role|upper }}</span>
                             <span class="meta-dot">•</span>
                             <span class="meta-country" id="pod-country">{{ p.country|upper }}</span>
+                            {% if p.is_overseas %}
+                                <span class="badge badge-overseas ml-2">✈️ Overseas</span>
+                            {% else %}
+                                <span class="badge badge-indian ml-2">🇮🇳 India</span>
+                            {% endif %}
+                            {% if p.former_team %}
+                                <span class="team-badge-cell team-bg-{{ p.former_team|lower }} ml-2" title="Former Franchise eligible for RTM Card">
+                                    Former: {{ p.former_team }}
+                                </span>
+                            {% endif %}
                         </div>
 
                         <!-- Career Stats Ticker -->
@@ -74,7 +110,7 @@
                             <div class="ticker-box"><span>WICKETS</span><strong id="pod-wickets" class="color-red">{{ p.wickets }}</strong></div>
                         </div>
 
-                        <!-- Base Price Tag (Matching Image 4) -->
+                        <!-- Base Price Tag -->
                         <div class="pod-base-price-tag">
                             <span class="tag-title">BASE PRICE</span>
                             <span class="tag-amount" id="pod-base-price">{{ format_currency(p.base_price) }}</span>
@@ -89,7 +125,7 @@
             </div>
         </div>
 
-        <!-- LIVE BIDDING STATUS & AUCTIONEER GAVEL CONSOLE (Matching Image 4) -->
+        <!-- LIVE BIDDING STATUS & AUCTIONEER GAVEL CONSOLE -->
         <div class="auctioneer-broadcast-panel">
             <div class="current-bid-display">
                 <span class="bid-header-label">CURRENT HIGHEST BID</span>
@@ -125,21 +161,21 @@
         {% else %}
         <div class="empty-arena-card">
             <div class="trophy-huge">🏆</div>
-            <h2>IPL 2026 MEGA AUCTION COMPLETED!</h2>
-            <p>All marquee players have gone under the hammer. Review the completed squads and purse details.</p>
+            <h2>AUCTION ROUND COMPLETED!</h2>
+            <p>All players in this set have gone under the hammer. Select another set or start the Accelerated Round.</p>
             <div class="mt-4">
                 <a href="/teams" class="btn btn-primary btn-lg">Inspect Team Squads & Spending →</a>
-                <a href="/" class="btn btn-outline btn-lg">View Analytics Dashboard</a>
+                <a href="/" class="btn btn-outline btn-lg">Back to Pre-Auction Hub</a>
             </div>
         </div>
         {% endif %}
     </div>
 
-    <!-- 10 FRANCHISE BIDDING DESKS IN ARENA (Matching Image 2 Arena Floor) -->
+    <!-- 10 FRANCHISE BIDDING DESKS IN ARENA FLOOR -->
     <div class="franchise-tables-arena mt-5">
         <div class="arena-section-title">
             <h3>🏢 FRANCHISE BIDDING DESKS (10 OFFICIAL TEAMS)</h3>
-            <span class="section-sub">Click "Raise Paddle" on any franchise to bid on their behalf in real time!</span>
+            <span class="section-sub">Raise paddle to bid • Squad bounds (18-25) & Max 8 Overseas enforced live</span>
         </div>
 
         <div class="franchise-tables-grid">
@@ -155,8 +191,26 @@
                         <strong class="desk-purse color-green" id="purse-{{ t.team_id }}">{{ t.remaining_budget_fmt }}</strong>
                     </div>
                     <div class="desk-metric-row">
-                        <span class="desk-label">Squad:</span>
-                        <span class="desk-squad">{{ t.current_squad_size }} / {{ t.max_squad_size }}</span>
+                        <span class="desk-label">Squad Progress:</span>
+                        <span class="desk-squad {% if t.total_squad_size >= 18 %}color-green{% else %}color-gold{% endif %}">
+                            {{ t.total_squad_size }} / 25
+                        </span>
+                    </div>
+                    <div class="desk-metric-row">
+                        <span class="desk-label">Overseas:</span>
+                        <span class="desk-overseas {% if t.overseas_count >= 8 %}color-red{% else %}color-blue{% endif %}">
+                            {{ t.overseas_count }} / 8 max
+                        </span>
+                    </div>
+                    <div class="desk-metric-row">
+                        <span class="desk-label">RTM Cards:</span>
+                        {% if current_mode == 'mega' %}
+                            <strong class="{% if t.rtm_cards > 0 %}color-green{% else %}text-muted{% endif %}">
+                                🃏 {{ t.rtm_cards }} RTM
+                            </strong>
+                        {% else %}
+                            <span class="text-muted text-xs">N/A (Mini)</span>
+                        {% endif %}
                     </div>
 
                     <!-- Interactive Paddle Button -->
@@ -165,7 +219,10 @@
                             data-team-id="{{ t.team_id }}" 
                             data-team-code="{{ t.short_code }}" 
                             data-team-name="{{ t.team_name }}"
-                            data-purse="{{ t.remaining_budget }}">
+                            data-purse="{{ t.remaining_budget }}"
+                            data-squad="{{ t.total_squad_size }}"
+                            data-overseas="{{ t.overseas_count }}"
+                            data-rtm="{{ t.rtm_cards }}">
                         ✋ RAISE {{ t.short_code }} PADDLE
                     </button>
                 </div>
@@ -175,97 +232,142 @@
     </div>
 </div>
 
-<!-- Safe JSON Payloads for Live Auction Engine -->
-<script type="application/json" id="data-pool-json">{{ pool_json|safe if pool else '[]' }}</script>
-<script type="application/json" id="data-teams-json">{{ teams_json|safe }}</script>
+<!-- =========================================================================
+     INTERACTIVE RIGHT-TO-MATCH (RTM) CARD CHALLENGE MODAL
+     ========================================================================= -->
+<div class="rtm-modal-overlay" id="rtm-modal">
+    <div class="rtm-modal-box">
+        <div class="rtm-modal-icon">🃏</div>
+        <h2 class="rtm-modal-title">RIGHT-TO-MATCH (RTM) CARD CHALLENGE</h2>
+        <div class="rtm-modal-desc" id="rtm-modal-text">
+            Former franchise has the right to match the highest bid.
+        </div>
+        <div class="rtm-modal-actions">
+            <button type="button" id="btn-rtm-exercise" class="btn btn-gold btn-lg">
+                ⚡ Exercise RTM Card & Retain Player
+            </button>
+            <button type="button" id="btn-rtm-decline" class="btn btn-outline btn-lg">
+                Decline RTM (Sell to Winning Bidder)
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Safe Data Storage in HTML5 Templates (Zero VS Code JS Syntax Errors) -->
+<template id="tmpl-pool-data">{{ pool_json|safe if pool else '[]' }}</template>
+<template id="tmpl-teams-data">{{ teams_json|safe }}</template>
+<template id="tmpl-auction-mode">{{ current_mode }}</template>
+<template id="tmpl-active-set">{{ active_set }}</template>
+<template id="tmpl-is-accelerated">{{ 'true' if is_accelerated else 'false' }}</template>
 
 <script>
-const POOL = JSON.parse(document.getElementById('data-pool-json').textContent);
-const TEAMS = JSON.parse(document.getElementById('data-teams-json').textContent);
+const POOL = JSON.parse(document.getElementById('tmpl-pool-data').innerHTML);
+const TEAMS = JSON.parse(document.getElementById('tmpl-teams-data').innerHTML);
+const AUCTION_MODE = document.getElementById('tmpl-auction-mode').innerHTML.trim();
+const ACTIVE_SET = document.getElementById('tmpl-active-set').innerHTML.trim();
+const IS_ACCELERATED = document.getElementById('tmpl-is-accelerated').innerHTML.trim() === 'true';
 
 let currentPoolIndex = 0;
 let currentBidAmount = POOL.length ? parseFloat(POOL[0].base_price) : 0;
 let currentWinningTeam = null;
 let isAuctionActive = POOL.length > 0;
+let pendingRTMData = null;
 
-// Web Audio API Sound Synthesizer for Gavel Knockdown & Bidding Chimes
+// Sound Synthesizer for Gavel Knockdowns & Bidding Chimes
 const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
 
 function playPaddleChime() {
     if (audioCtx.state === 'suspended') audioCtx.resume();
     const osc = audioCtx.createOscillator();
     const gain = audioCtx.createGain();
-    osc.type = 'sine';
-    osc.frequency.setValueAtTime(587.33, audioCtx.currentTime); // D5
-    osc.frequency.exponentialRampToValueAtTime(880, audioCtx.currentTime + 0.15); // A5
-    gain.gain.setValueAtTime(0.25, audioCtx.currentTime);
-    gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.25);
-    osc.connect(gain);
-    gain.connect(audioCtx.destination);
-    osc.start();
-    osc.stop(audioCtx.currentTime + 0.25);
-}
-
-function playGavelStrikeSound() {
-    if (audioCtx.state === 'suspended') audioCtx.resume();
-    // Low frequency thud
-    const osc = audioCtx.createOscillator();
-    const gain = audioCtx.createGain();
     osc.type = 'triangle';
-    osc.frequency.setValueAtTime(120, audioCtx.currentTime);
-    osc.frequency.exponentialRampToValueAtTime(30, audioCtx.currentTime + 0.3);
-    gain.gain.setValueAtTime(0.8, audioCtx.currentTime);
-    gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.35);
+    osc.frequency.setValueAtTime(587.33, audioCtx.currentTime); // D5
+    osc.frequency.exponentialRampToValueAtTime(880.0, audioCtx.currentTime + 0.15); // A5
+    gain.gain.setValueAtTime(0.25, audioCtx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.35);
     osc.connect(gain);
     gain.connect(audioCtx.destination);
     osc.start();
     osc.stop(audioCtx.currentTime + 0.35);
 }
 
-function formatINR(amount) {
-    if (amount >= 10000000) return '₹' + (amount / 10000000).toFixed(2) + ' Cr';
-    if (amount >= 100000) return '₹' + (amount / 100000).toFixed(2) + ' L';
-    return '₹' + amount.toLocaleString();
+function playGavelStrikeSound() {
+    if (audioCtx.state === 'suspended') audioCtx.resume();
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(140, audioCtx.currentTime);
+    osc.frequency.exponentialRampToValueAtTime(35, audioCtx.currentTime + 0.25);
+    gain.gain.setValueAtTime(0.7, audioCtx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.3);
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
+    osc.start();
+    osc.stop(audioCtx.currentTime + 0.3);
 }
 
-function getBidIncrement(bid) {
-    if (bid < 10000000) return 1000000;       // 10 L
-    if (bid < 20000000) return 2000000;       // 20 L
-    if (bid < 50000000) return 2500000;       // 25 L
-    if (bid < 100000000) return 5000000;      // 50 L
-    return 10000000;                          // 1 Cr
+// Official IPL Bid Increment Rules
+function getBidIncrement(amount) {
+    if (amount < 10000000) return 1000000;       // < ₹1 Cr -> +₹10 Lakhs
+    if (amount < 20000000) return 2000000;       // ₹1-2 Cr -> +₹20 Lakhs
+    if (amount < 50000000) return 2500000;       // ₹2-5 Cr -> +₹25 Lakhs
+    if (amount < 100000000) return 5000000;      // ₹5-10 Cr -> +₹50 Lakhs
+    return 10000000;                             // > ₹10 Cr -> +₹1.00 Crore
 }
 
-// Paddle Click Handler
+function formatINR(val) {
+    if (val >= 10000000) {
+        return `₹${(val / 10000000).toFixed(2)} Cr`;
+    }
+    return `₹${(val / 100000).toFixed(2)} Lakh`;
+}
+
+// Franchise Paddle Click
 document.querySelectorAll('.btn-paddle').forEach(btn => {
     btn.addEventListener('click', function() {
         if (!isAuctionActive || !POOL.length) return;
 
-        const teamId = parseInt(this.dataset.teamId);
-        const teamCode = this.dataset.teamCode;
-        const teamName = this.dataset.teamName;
-        const teamPurse = parseFloat(this.dataset.purse);
+        const teamId = parseInt(this.getAttribute('data-team-id'));
+        const teamCode = this.getAttribute('data-team-code');
+        const teamName = this.getAttribute('data-team-name');
+        const teamPurse = parseFloat(this.getAttribute('data-purse'));
+        const squadSize = parseInt(this.getAttribute('data-squad'));
+        const overseas = parseInt(this.getAttribute('data-overseas'));
 
-        const inc = getBidIncrement(currentBidAmount);
-        const nextBid = currentBidAmount + inc;
+        const player = POOL[0];
+        const isOverseas = player.is_overseas || (player.country !== 'India');
 
-        if (teamPurse < nextBid) {
-            alert(`${teamName} cannot bid! Remaining purse is only ${formatINR(teamPurse)}.`);
+        // Check squad limit (max 25)
+        if (squadSize >= 25) {
+            alert(`Cannot bid: ${teamCode} squad is full (25/25 players)!`);
             return;
         }
 
-        // Place Bid
+        // Check overseas quota (max 8)
+        if (isOverseas && overseas >= 8) {
+            alert(`Cannot bid: ${teamCode} has reached overseas limit (8/8 overseas)!`);
+            return;
+        }
+
+        let nextBid = currentBidAmount;
+        if (currentWinningTeam) {
+            nextBid = currentBidAmount + getBidIncrement(currentBidAmount);
+        }
+
+        if (teamPurse < nextBid) {
+            alert(`Cannot bid: ${teamCode} has insufficient purse (${formatINR(teamPurse)} available)!`);
+            return;
+        }
+
         currentBidAmount = nextBid;
         currentWinningTeam = { team_id: teamId, short_code: teamCode, team_name: teamName };
 
-        // Visual Table Glow
         highlightTeamDesk(teamCode);
         playPaddleChime();
 
-        // Update Display
         document.getElementById('current-bid-amount').innerText = formatINR(currentBidAmount);
         document.getElementById('current-bidder-badge').innerText = `${teamName} (${teamCode})`;
-        document.getElementById('gavel-call-text').innerHTML = `<strong>${teamName}</strong> raises paddle to <strong>${formatINR(currentBidAmount)}</strong>!`;
+        document.getElementById('gavel-call-text').innerHTML = `✋ <strong>${teamName}</strong> paddle raised at <strong>${formatINR(currentBidAmount)}</strong>!`;
     });
 });
 
@@ -278,15 +380,24 @@ function highlightTeamDesk(code) {
     }
 }
 
-// Trigger AI Bid
+// AI Bid Simulation
 document.getElementById('btn-next-ai-bid')?.addEventListener('click', function() {
     if (!isAuctionActive || !POOL.length) return;
 
     const inc = getBidIncrement(currentBidAmount);
-    const nextBid = currentBidAmount + inc;
+    const nextBid = currentWinningTeam ? (currentBidAmount + inc) : currentBidAmount;
+    const player = POOL[0];
+    const isOverseas = player.is_overseas || (player.country !== 'India');
 
-    // Pick random eligible team other than current
-    const eligible = TEAMS.filter(t => t.remaining_budget >= nextBid && (!currentWinningTeam || t.team_id !== currentWinningTeam.team_id));
+    // Filter eligible franchises
+    const eligible = TEAMS.filter(t => {
+        if (t.remaining_budget < nextBid) return false;
+        if (t.total_squad_size >= 25) return false;
+        if (isOverseas && t.overseas_count >= 8) return false;
+        if (currentWinningTeam && t.team_id === currentWinningTeam.team_id) return false;
+        return true;
+    });
+
     if (!eligible.length) {
         alert('No other franchise can afford to raise the bid!');
         return;
@@ -304,7 +415,7 @@ document.getElementById('btn-next-ai-bid')?.addEventListener('click', function()
     document.getElementById('gavel-call-text').innerHTML = `✋ <strong>${bidder.team_name}</strong> paddle raised at <strong>${formatINR(currentBidAmount)}</strong>!`;
 });
 
-// Hammer Knockdown & Finalize Sale
+// Hammer Knockdown & Sale Finalization
 document.getElementById('btn-hammer-knockdown')?.addEventListener('click', async function() {
     if (!isAuctionActive || !POOL.length) return;
     const btn = this;
@@ -314,48 +425,132 @@ document.getElementById('btn-hammer-knockdown')?.addEventListener('click', async
     const statusBox = document.getElementById('gavel-call-text');
 
     if (!currentWinningTeam) {
-        alert('Please place at least one paddle raise before hammering down!');
+        alert('Please raise at least one paddle before hammering down!');
         btn.disabled = false;
         return;
     }
 
-    // Mallika Sagar Gavel Countdown
-    statusBox.innerHTML = `🔨 "Going once at ${formatINR(currentBidAmount)}..."`;
+    // Check RTM eligibility if Mega Auction
+    if (AUCTION_MODE === 'mega' && player.former_team) {
+        try {
+            const rtmRes = await fetch('/api/auction/check_rtm', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    player_id: player.player_id,
+                    winning_team_id: currentWinningTeam.team_id
+                })
+            });
+            const rtmCheck = await rtmRes.json();
+            if (rtmCheck.eligible) {
+                pendingRTMData = {
+                    player_id: player.player_id,
+                    former_team_id: rtmCheck.former_team.team_id,
+                    former_team_code: rtmCheck.former_team.short_code,
+                    former_team_name: rtmCheck.former_team.team_name,
+                    final_price: currentBidAmount
+                };
+
+                document.getElementById('rtm-modal-text').innerHTML = `
+                    Winning bid is <strong>${formatINR(currentBidAmount)}</strong> by <strong>${currentWinningTeam.team_name}</strong>.<br><br>
+                    Does <strong>${rtmCheck.former_team.team_name} (${rtmCheck.former_team.short_code})</strong> want to invoke their RTM card to match this bid and retain <strong>${player.name}</strong>?<br>
+                    <span class="color-gold font-bold">${rtmCheck.former_team.rtm_cards} RTM Cards Remaining</span>
+                `;
+                document.getElementById('rtm-modal').classList.add('open');
+                btn.disabled = false;
+                return;
+            }
+        } catch (e) {
+            console.warn('RTM check notice:', e);
+        }
+    }
+
+    // Normal Knockdown Execution
+    await executeFinalKnockdown(player.player_id, currentWinningTeam.team_id, currentBidAmount, currentWinningTeam.team_name);
+});
+
+async function executeFinalKnockdown(playerId, teamId, price, teamName) {
+    const statusBox = document.getElementById('gavel-call-text');
+    const player = POOL[0];
+
+    statusBox.innerHTML = `🔨 "Going once at ${formatINR(price)}..."`;
     playGavelStrikeSound();
 
-    await new Promise(r => setTimeout(r, 700));
-    statusBox.innerHTML = `🔨 "Going twice at ${formatINR(currentBidAmount)}..."`;
+    await new Promise(r => setTimeout(r, 650));
+    statusBox.innerHTML = `🔨 "Going twice at ${formatINR(price)}..."`;
     playGavelStrikeSound();
 
-    await new Promise(r => setTimeout(r, 700));
+    await new Promise(r => setTimeout(r, 650));
     playGavelStrikeSound();
 
-    // Trigger Golden Confetti Explosion
-    confetti({
-        particleCount: 150,
-        spread: 90,
-        origin: { y: 0.6 },
-        colors: ['#FDB913', '#EC1C24', '#004BA0', '#10b981']
-    });
+    if (window.confetti) {
+        confetti({
+            particleCount: 150,
+            spread: 90,
+            origin: { y: 0.6 },
+            colors: ['#FDB913', '#EC1C24', '#004BA0', '#10b981']
+        });
+    }
 
-    statusBox.innerHTML = `🎉 <strong>SOLD!</strong> ${player.name} is SOLD to <strong>${currentWinningTeam.team_name}</strong> for <strong>${formatINR(currentBidAmount)}</strong>!`;
+    statusBox.innerHTML = `🎉 <strong>SOLD!</strong> ${player.name} is SOLD to <strong>${teamName}</strong> for <strong>${formatINR(price)}</strong>!`;
 
-    // Persist to Database via API
     try {
         await fetch('/api/auction/record_manual_bid', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-                player_id: player.player_id,
-                team_id: currentWinningTeam.team_id,
-                sold_price: currentBidAmount
+                player_id: playerId,
+                team_id: teamId,
+                sold_price: price
             })
         });
-
-        setTimeout(() => { window.location.reload(); }, 2200);
+        setTimeout(() => { window.location.reload(); }, 2000);
     } catch (err) {
         alert('Error saving bid: ' + err);
-        btn.disabled = false;
+        window.location.reload();
+    }
+}
+
+// RTM Modal Action Handlers
+document.getElementById('btn-rtm-exercise')?.addEventListener('click', async function() {
+    if (!pendingRTMData) return;
+    this.disabled = true;
+    document.getElementById('rtm-modal').classList.remove('open');
+
+    try {
+        const res = await fetch('/api/auction/execute_rtm', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                player_id: pendingRTMData.player_id,
+                former_team_id: pendingRTMData.former_team_id,
+                final_price: pendingRTMData.final_price
+            })
+        });
+        const data = await res.json();
+        if (data.success) {
+            playGavelStrikeSound();
+            if (window.confetti) {
+                confetti({ particleCount: 180, spread: 100, origin: { y: 0.6 } });
+            }
+            document.getElementById('gavel-call-text').innerHTML = `
+                🃏 <strong>RTM EXERCISED!</strong> ${POOL[0].name} is MATCHED & RETAINED by <strong>${pendingRTMData.former_team_name}</strong> for <strong>${formatINR(pendingRTMData.final_price)}</strong>!
+            `;
+            setTimeout(() => { window.location.reload(); }, 2200);
+        } else {
+            alert('RTM failed: ' + data.message);
+            window.location.reload();
+        }
+    } catch (e) {
+        alert('RTM error: ' + e);
+        window.location.reload();
+    }
+});
+
+document.getElementById('btn-rtm-decline')?.addEventListener('click', async function() {
+    document.getElementById('rtm-modal').classList.remove('open');
+    if (pendingRTMData && currentWinningTeam) {
+        await executeFinalKnockdown(pendingRTMData.player_id, currentWinningTeam.team_id, pendingRTMData.final_price, currentWinningTeam.team_name);
     }
 });
 
@@ -377,7 +572,7 @@ document.getElementById('btn-pass-unsold')?.addEventListener('click', async func
                 unsold: true
             })
         });
-        setTimeout(() => { window.location.reload(); }, 1500);
+        setTimeout(() => { window.location.reload(); }, 1400);
     } catch (err) {
         window.location.reload();
     }
@@ -389,14 +584,27 @@ document.getElementById('btn-auto-simulate')?.addEventListener('click', async fu
     this.disabled = true;
     this.innerText = 'Simulating full auction battle...';
 
-    const res = await fetch('/api/auction/simulate_next', { method: 'POST' });
+    const res = await fetch('/api/auction/simulate_next', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            set_code: ACTIVE_SET,
+            accelerated: IS_ACCELERATED
+        })
+    });
     const data = await res.json();
 
     if (data.success) {
         playGavelStrikeSound();
-        confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } });
+        if (window.confetti) {
+            confetti({ particleCount: 120, spread: 80, origin: { y: 0.6 } });
+        }
         document.getElementById('gavel-call-text').innerHTML = `🎉 <strong>SOLD:</strong> ${data.player_name} to <strong>${data.winning_team}</strong> for <strong>${data.sold_price_fmt}</strong>!`;
         setTimeout(() => { window.location.reload(); }, 1800);
+    } else {
+        alert(data.message);
+        this.disabled = false;
+        this.innerText = '⏩ Fast-Forward Player Battle';
     }
 });
 </script>

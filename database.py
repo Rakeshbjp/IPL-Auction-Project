@@ -69,7 +69,13 @@ def init_db(force_reset: bool = False) -> None:
         secondary_color TEXT DEFAULT '#000000',
         total_budget REAL NOT NULL DEFAULT 1200000000.0,
         remaining_budget REAL NOT NULL DEFAULT 1200000000.0,
-        max_squad_size INTEGER NOT NULL DEFAULT 25
+        retention_spend REAL NOT NULL DEFAULT 0.0,
+        retentions_count INTEGER NOT NULL DEFAULT 0,
+        rtm_cards INTEGER NOT NULL DEFAULT 0,
+        retained_names TEXT DEFAULT '',
+        min_squad_size INTEGER NOT NULL DEFAULT 18,
+        max_squad_size INTEGER NOT NULL DEFAULT 25,
+        max_overseas INTEGER NOT NULL DEFAULT 8
     );
     """)
 
@@ -83,6 +89,13 @@ def init_db(force_reset: bool = False) -> None:
         base_price REAL NOT NULL,
         sold_price REAL DEFAULT 0.0,
         status TEXT NOT NULL DEFAULT 'Available',
+        set_name TEXT DEFAULT 'Set 1: Capped Batters (BA1)',
+        set_code TEXT DEFAULT 'BA1',
+        is_capped INTEGER DEFAULT 1,
+        is_overseas INTEGER DEFAULT 0,
+        former_team TEXT DEFAULT NULL,
+        is_shortlisted INTEGER DEFAULT 1,
+        accelerated INTEGER DEFAULT 0,
         team_id INTEGER,
         FOREIGN KEY (team_id) REFERENCES teams(team_id) ON DELETE SET NULL
     );
@@ -147,9 +160,43 @@ def init_db(force_reset: bool = False) -> None:
         );
         """)
 
+    # Ensure columns exist for teams
+    cursor.execute("PRAGMA table_info(teams);")
+    existing_team_cols = [r[1] for r in cursor.fetchall()]
+    if "retentions_count" not in existing_team_cols:
+        cursor.execute("ALTER TABLE teams ADD COLUMN retentions_count INTEGER DEFAULT 0;")
+    if "rtm_cards" not in existing_team_cols:
+        cursor.execute("ALTER TABLE teams ADD COLUMN rtm_cards INTEGER DEFAULT 0;")
+    if "retained_names" not in existing_team_cols:
+        cursor.execute("ALTER TABLE teams ADD COLUMN retained_names TEXT DEFAULT '';")
+    if "retention_spend" not in existing_team_cols:
+        cursor.execute("ALTER TABLE teams ADD COLUMN retention_spend REAL DEFAULT 0.0;")
+    if "min_squad_size" not in existing_team_cols:
+        cursor.execute("ALTER TABLE teams ADD COLUMN min_squad_size INTEGER DEFAULT 18;")
+    if "max_overseas" not in existing_team_cols:
+        cursor.execute("ALTER TABLE teams ADD COLUMN max_overseas INTEGER DEFAULT 8;")
+
+    # Ensure columns exist for players
+    cursor.execute("PRAGMA table_info(players);")
+    existing_player_cols = [r[1] for r in cursor.fetchall()]
+    if "set_name" not in existing_player_cols:
+        cursor.execute("ALTER TABLE players ADD COLUMN set_name TEXT DEFAULT 'Set 1: Capped Batters (BA1)';")
+    if "set_code" not in existing_player_cols:
+        cursor.execute("ALTER TABLE players ADD COLUMN set_code TEXT DEFAULT 'BA1';")
+    if "is_capped" not in existing_player_cols:
+        cursor.execute("ALTER TABLE players ADD COLUMN is_capped INTEGER DEFAULT 1;")
+    if "is_overseas" not in existing_player_cols:
+        cursor.execute("ALTER TABLE players ADD COLUMN is_overseas INTEGER DEFAULT 0;")
+    if "former_team" not in existing_player_cols:
+        cursor.execute("ALTER TABLE players ADD COLUMN former_team TEXT DEFAULT NULL;")
+    if "is_shortlisted" not in existing_player_cols:
+        cursor.execute("ALTER TABLE players ADD COLUMN is_shortlisted INTEGER DEFAULT 1;")
+    if "accelerated" not in existing_player_cols:
+        cursor.execute("ALTER TABLE players ADD COLUMN accelerated INTEGER DEFAULT 0;")
+
     conn.commit()
 
-    # Seed initial data if tables are empty
+    # Seed initial data if tables are empty or need update
     _seed_initial_data(conn)
     conn.close()
 
@@ -165,8 +212,11 @@ def _seed_initial_data(conn: sqlite3.Connection) -> None:
     if team_count == 0:
         for team in INITIAL_TEAMS:
             cursor.execute("""
-            INSERT INTO teams (team_name, short_code, primary_color, secondary_color, total_budget, remaining_budget, max_squad_size)
-            VALUES (?, ?, ?, ?, ?, ?, ?);
+            INSERT INTO teams (
+                team_name, short_code, primary_color, secondary_color,
+                total_budget, remaining_budget, retention_spend, retentions_count,
+                rtm_cards, retained_names, min_squad_size, max_squad_size, max_overseas
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
             """, (
                 team["team_name"],
                 team["short_code"],
@@ -174,7 +224,37 @@ def _seed_initial_data(conn: sqlite3.Connection) -> None:
                 team.get("secondary_color", "#000000"),
                 team["total_budget"],
                 team["remaining_budget"],
-                team["max_squad_size"]
+                team.get("retention_spend", 0.0),
+                team.get("retentions_count", 0),
+                team.get("rtm_cards", 0),
+                team.get("retained_names", ""),
+                team.get("min_squad_size", 18),
+                team.get("max_squad_size", 25),
+                team.get("max_overseas", 8)
+            ))
+        conn.commit()
+    else:
+        # Update teams with authentic retentions & RTM values
+        for team in INITIAL_TEAMS:
+            cursor.execute("""
+            UPDATE teams SET
+                retention_spend = ?,
+                retentions_count = ?,
+                rtm_cards = ?,
+                retained_names = ?,
+                min_squad_size = ?,
+                max_squad_size = ?,
+                max_overseas = ?
+            WHERE short_code = ?;
+            """, (
+                team.get("retention_spend", 0.0),
+                team.get("retentions_count", 0),
+                team.get("rtm_cards", 0),
+                team.get("retained_names", ""),
+                team.get("min_squad_size", 18),
+                team.get("max_squad_size", 25),
+                team.get("max_overseas", 8),
+                team["short_code"]
             ))
         conn.commit()
 
@@ -184,14 +264,22 @@ def _seed_initial_data(conn: sqlite3.Connection) -> None:
 
     if player_count == 0:
         for p in INITIAL_PLAYERS:
+            is_os = 1 if p.get("country", "India") != "India" else 0
             cursor.execute("""
-            INSERT INTO players (name, role, country, base_price, sold_price, status, team_id)
-            VALUES (?, ?, ?, ?, 0.0, 'Available', NULL);
+            INSERT INTO players (
+                name, role, country, base_price, sold_price, status, team_id,
+                set_name, set_code, is_capped, is_overseas, former_team, is_shortlisted, accelerated
+            ) VALUES (?, ?, ?, ?, 0.0, 'Available', NULL, ?, ?, ?, ?, ?, 1, 0);
             """, (
                 p["name"],
                 p["role"],
                 p["country"],
-                p["base_price"]
+                p["base_price"],
+                p.get("set_name", "Set 1: Capped Batters (BA1)"),
+                p.get("set_code", "BA1"),
+                1 if p.get("is_capped", True) else 0,
+                is_os,
+                p.get("former_team"),
             ))
             player_id = cursor.lastrowid
             stats = p["stats"]
@@ -215,6 +303,27 @@ def _seed_initial_data(conn: sqlite3.Connection) -> None:
                 stats.get("wickets", 0),
                 stats.get("bowling_economy", 0.0),
                 stats.get("bowling_avg", 0.0)
+            ))
+        conn.commit()
+    else:
+        # Update existing players with set info, former team, overseas flag
+        for p in INITIAL_PLAYERS:
+            is_os = 1 if p.get("country", "India") != "India" else 0
+            cursor.execute("""
+            UPDATE players SET
+                set_name = ?,
+                set_code = ?,
+                is_capped = ?,
+                is_overseas = ?,
+                former_team = ?
+            WHERE name = ?;
+            """, (
+                p.get("set_name", "Set 1: Capped Batters (BA1)"),
+                p.get("set_code", "BA1"),
+                1 if p.get("is_capped", True) else 0,
+                is_os,
+                p.get("former_team"),
+                p["name"]
             ))
         conn.commit()
 

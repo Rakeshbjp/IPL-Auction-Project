@@ -1,12 +1,13 @@
 """
 Script to generate production-ready supabase_schema.sql with:
 - Relational core tables (teams, players, player_stats, auction_bids)
+- Official IPL Mega Auction Rules: Retentions & RTM Formula (6 - retentions)
+- Sequential Categorized Sets: BA1, AL1, WK1, FA1, SP1, UN1
 - 10 Dedicated franchise squad tables (csk_players, mi_players, rcb_players, etc.)
 - 10 Dynamic squad views (csk_squad, mi_squad, rcb_squad, etc.)
 - Permissive Row Level Security Policies ("Public Full Access") for anon and service_role
-- 10 Official Teams with ₹120 Cr budget
+- 10 Official Teams with ₹120 Cr budget and authentic retentions
 - 49 Authentic IPL Star Players and their full statistics
-- Virat Kohli pre-purchased for RCB (₹2.50 Cr)
 """
 
 import sys
@@ -16,7 +17,7 @@ TEAM_CODES = ["csk", "mi", "rcb", "kkr", "rr", "srh", "gt", "lsg", "dc", "pbks"]
 
 lines = []
 lines.append("-- ============================================================================")
-lines.append("-- TATA IPL 2026 MEGA AUCTION - REAL DATA SUPABASE POSTGRESQL SCHEMA")
+lines.append("-- TATA IPL 2026 MEGA AUCTION - OFFICIAL REAL-TIME SUPABASE POSTGRESQL SCHEMA")
 lines.append("-- Copy this ENTIRE file, paste into Supabase SQL Editor and click RUN")
 lines.append("-- ============================================================================\n")
 
@@ -44,7 +45,13 @@ CREATE TABLE teams (
     secondary_color VARCHAR(20) DEFAULT '#000000',
     total_budget NUMERIC(15, 2) NOT NULL DEFAULT 1200000000.00,
     remaining_budget NUMERIC(15, 2) NOT NULL DEFAULT 1200000000.00,
-    max_squad_size INT NOT NULL DEFAULT 25
+    retention_spend NUMERIC(15, 2) NOT NULL DEFAULT 0.00,
+    retentions_count INT NOT NULL DEFAULT 0,
+    rtm_cards INT NOT NULL DEFAULT 0,
+    retained_names TEXT DEFAULT '',
+    min_squad_size INT NOT NULL DEFAULT 18,
+    max_squad_size INT NOT NULL DEFAULT 25,
+    max_overseas INT NOT NULL DEFAULT 8
 );
 
 CREATE TABLE players (
@@ -55,6 +62,13 @@ CREATE TABLE players (
     base_price NUMERIC(15, 2) NOT NULL,
     sold_price NUMERIC(15, 2) DEFAULT 0.00,
     status VARCHAR(20) NOT NULL DEFAULT 'Available',
+    set_name VARCHAR(100) DEFAULT 'Set 1: Capped Batters (BA1)',
+    set_code VARCHAR(10) DEFAULT 'BA1',
+    is_capped INT DEFAULT 1,
+    is_overseas INT DEFAULT 0,
+    former_team VARCHAR(10) DEFAULT NULL,
+    is_shortlisted INT DEFAULT 1,
+    accelerated INT DEFAULT 0,
     team_id INT REFERENCES teams(team_id) ON DELETE SET NULL
 );
 
@@ -135,7 +149,7 @@ lines.append("-- 5. Dynamic Views for Franchise Squads")
 for code in TEAM_CODES:
     lines.append(f"""CREATE OR REPLACE VIEW {code}_squad AS
 SELECT 
-    p.player_id, p.name, p.role, p.country, p.sold_price,
+    p.player_id, p.name, p.role, p.country, p.sold_price, p.set_name, p.former_team,
     s.matches, s.runs, s.highest_score, s.batting_avg, s.strike_rate,
     s.fours, s.sixes, s.wickets, s.bowling_economy
 FROM players p
@@ -146,21 +160,25 @@ WHERE UPPER(t.short_code) = '{code.upper()}';""")
 lines.append("")
 
 # 6. Seed 10 Teams
-lines.append("-- 6. Seed 10 Real IPL Franchises (₹120.00 Crore purse each)")
-lines.append("INSERT INTO teams (team_id, team_name, short_code, primary_color, secondary_color, total_budget, remaining_budget, max_squad_size) VALUES")
+lines.append("-- 6. Seed 10 Real IPL Franchises with Official Purses, Retentions & RTM allocations")
+lines.append("INSERT INTO teams (team_id, team_name, short_code, primary_color, secondary_color, total_budget, remaining_budget, retention_spend, retentions_count, rtm_cards, retained_names, min_squad_size, max_squad_size, max_overseas) VALUES")
 team_vals = []
 for idx, t in enumerate(INITIAL_TEAMS, start=1):
-    val = f"({idx}, '{t['team_name']}', '{t['short_code']}', '{t['primary_color']}', '{t['secondary_color']}', {t['total_budget']:.2f}, {t['remaining_budget']:.2f}, {t['max_squad_size']})"
+    safe_retained = t.get("retained_names", "").replace("'", "''")
+    val = f"({idx}, '{t['team_name']}', '{t['short_code']}', '{t['primary_color']}', '{t['secondary_color']}', {t['total_budget']:.2f}, {t['remaining_budget']:.2f}, {t.get('retention_spend', 0.0):.2f}, {t.get('retentions_count', 0)}, {t.get('rtm_cards', 0)}, '{safe_retained}', {t.get('min_squad_size', 18)}, {t.get('max_squad_size', 25)}, {t.get('max_overseas', 8)})"
     team_vals.append(val)
 lines.append(",\n".join(team_vals) + ";\n")
 
 # 7. Seed Players
-lines.append("-- 7. Seed Real IPL Players & Authentic Career Statistics")
-lines.append("INSERT INTO players (player_id, name, role, country, base_price, sold_price, status, team_id) VALUES")
+lines.append("-- 7. Seed Real IPL Players organized into Sequential Sets with Former Team RTM mapping")
+lines.append("INSERT INTO players (player_id, name, role, country, base_price, sold_price, status, set_name, set_code, is_capped, is_overseas, former_team, is_shortlisted, accelerated, team_id) VALUES")
 player_vals = []
 for idx, p in enumerate(INITIAL_PLAYERS, start=1):
     safe_name = p['name'].replace("'", "''")
-    val = f"({idx}, '{safe_name}', '{p['role']}', '{p['country']}', {p['base_price']:.2f}, 0.00, 'Available', NULL)"
+    is_os = 1 if p.get('country', 'India') != 'India' else 0
+    is_cap = 1 if p.get('is_capped', True) else 0
+    former = f"'{p.get('former_team')}'" if p.get('former_team') else "NULL"
+    val = f"({idx}, '{safe_name}', '{p['role']}', '{p['country']}', {p['base_price']:.2f}, 0.00, 'Available', '{p.get('set_name', 'Set 1: Capped Batters (BA1)')}', '{p.get('set_code', 'BA1')}', {is_cap}, {is_os}, {former}, 1, 0, NULL)"
     player_vals.append(val)
 lines.append(",\n".join(player_vals) + ";\n")
 
@@ -174,25 +192,12 @@ for idx, p in enumerate(INITIAL_PLAYERS, start=1):
     stats_vals.append(val)
 lines.append(",\n".join(stats_vals) + ";\n")
 
-# 9. Record Virat Kohli's Purchase into RCB and rcb_players
-lines.append("""-- 9. Record Virat Kohli's Purchase for Royal Challengers Bengaluru (RCB)
-UPDATE players SET status = 'Sold', sold_price = 25000000.00, team_id = 3 WHERE player_id = 1;
-UPDATE teams SET remaining_budget = 1175000000.00 WHERE team_id = 3;
-INSERT INTO auction_bids (player_id, team_id, bid_amount) VALUES (1, 3, 25000000.00);
-
-INSERT INTO rcb_players (player_id, name, role, country, sold_price, matches, runs, highest_score, batting_avg, strike_rate, fours, sixes, wickets, bowling_economy, bowling_avg)
-SELECT p.player_id, p.name, p.role, p.country, 25000000.00, s.matches, s.runs, s.highest_score, s.batting_avg, s.strike_rate, s.fours, s.sixes, s.wickets, s.bowling_economy, s.bowling_avg
-FROM players p
-LEFT JOIN player_stats s ON p.player_id = s.player_id
-WHERE p.player_id = 1;
-""")
-
-# 10. Sequence resets
-lines.append("""-- 10. Reset PostgreSQL ID Sequences so future user inserts continue smoothly
+# 9. Sequence resets
+lines.append("""-- 9. Reset PostgreSQL ID Sequences so future user inserts continue smoothly
 SELECT setval('teams_team_id_seq', (SELECT MAX(team_id) FROM teams));
 SELECT setval('players_player_id_seq', (SELECT MAX(player_id) FROM players));
 SELECT setval('player_stats_stat_id_seq', (SELECT MAX(stat_id) FROM player_stats));
-SELECT setval('auction_bids_bid_id_seq', (SELECT MAX(bid_id) FROM auction_bids));
+SELECT setval('auction_bids_bid_id_seq', COALESCE((SELECT MAX(bid_id) FROM auction_bids), 1));
 """)
 
 with open("supabase_schema.sql", "w", encoding="utf-8") as f:

@@ -1,6 +1,11 @@
 """
-Flask Web Application for IPL Auction & Player Analytics
-Provides an interactive, visual browser interface matching real broadcast IPL Auctions.
+Flask Web Application for Official TATA IPL Mega Auction & Pre-Auction Center
+Supports:
+- Pre-Auction Preparations: Player Registration, Shortlisting, Purse & Squad Limits (18-25, max 8 overseas)
+- Mega Auction vs Mini Auction Modes (Mega: RTM = 6 - Retentions; Mini: 0 RTM)
+- Sequential Categorized Sets (Capped Batters, All-rounders, Wicketkeepers, Fast Bowlers, Spinners, Uncapped)
+- Live Auction Arena with Official Increment Slabs and RTM Card Invocations
+- Accelerated Auction Round for Shortlisted Unsold Players
 """
 
 from flask import Flask, render_template, request, jsonify, redirect, url_for, flash
@@ -33,12 +38,20 @@ from crud.team_crud import (
 )
 from auction.auction_engine import (
     get_available_players_pool,
+    get_unsold_players_pool,
+    add_to_accelerated_shortlist,
+    get_auction_sets,
+    get_auction_mode,
+    set_auction_mode,
     run_player_auction,
     record_winning_bid,
     mark_player_unsold,
     reset_entire_auction,
     get_auction_stats,
     get_bid_increment,
+    check_rtm_eligibility,
+    execute_rtm_claim,
+    validate_team_bid,
 )
 
 app = Flask(__name__, template_folder="templates", static_folder="static")
@@ -55,43 +68,62 @@ def utility_processor():
 
 @app.route("/")
 def dashboard():
-    """Main broadcast analytics dashboard matching Image 3 (Batting Analysis Dashboard)."""
+    """
+    Official IPL Auction Command & Pre-Auction Center:
+    - Mode Switcher (Mega vs Mini Auction)
+    - Pre-Auction Hub (Retentions, RTM allocations, Squad limits 18-25, max 8 overseas)
+    - Sequential Sets Hub (BA1, AL1, WK1, FA1, SP1, UN1)
+    - Player Registration & Shortlisting Pool
+    - Accelerated Auction Round Preparation
+    """
+    teams = read_all_teams()
     players = read_all_players()
-    teams = get_team_budget_overview()
-    top_runs = get_top_run_scorers_mergesort(10)
-    top_avg = get_top_batting_averages_quicksort(10, min_matches=10)
+    auction_sets = get_auction_sets()
     auction_stats = get_auction_stats()
+    unsold_players = get_unsold_players_pool()
+    current_mode = get_auction_mode()
 
-    # Calculate aggregate league batting statistics
-    total_runs = sum(p.get("runs", 0) for p in players)
-    total_fours = sum(p.get("fours", 0) for p in players)
-    total_sixes = sum(p.get("sixes", 0) for p in players)
-    valid_sr_players = [p.get("strike_rate", 0.0) for p in players if p.get("strike_rate", 0.0) > 0]
-    avg_strike_rate = (sum(valid_sr_players) / len(valid_sr_players)) if valid_sr_players else 0.0
+    # Pre-auction calculations
+    total_purse_league = sum(t.get("total_budget", 0) for t in teams)
+    total_retained_players = sum(t.get("retentions_count", 0) for t in teams)
+    total_retention_spend = sum(t.get("retention_spend", 0.0) for t in teams)
+    total_rtm_cards_available = sum(t.get("rtm_cards", 0) for t in teams)
+
+    # Base price tiers count
+    tiers = {
+        "2_cr": len([p for p in players if p.get("base_price") == 20000000.0]),
+        "1_5_cr": len([p for p in players if p.get("base_price") == 15000000.0]),
+        "1_cr": len([p for p in players if p.get("base_price") == 10000000.0]),
+        "uncapped_40_l": len([p for p in players if p.get("base_price") == 4000000.0]),
+    }
 
     db_engine = "Supabase PostgreSQL" if (DB_MODE == "supabase" and is_supabase_configured()) else "SQLite3 (Relational)"
 
     return render_template(
         "index.html",
-        total_players=len(players),
-        total_runs=total_runs,
-        total_fours=total_fours,
-        total_sixes=total_sixes,
-        avg_strike_rate=avg_strike_rate,
         teams=teams,
-        top_runs=top_runs,
-        top_avg=top_avg,
+        players=players,
+        auction_sets=auction_sets,
         auction_stats=auction_stats,
+        unsold_players=unsold_players,
+        current_mode=current_mode,
+        total_purse_league=total_purse_league,
+        total_retained_players=total_retained_players,
+        total_retention_spend=total_retention_spend,
+        total_rtm_cards_available=total_rtm_cards_available,
+        tiers=tiers,
         db_engine=db_engine,
-        players_json=json.dumps(players),
         teams_json=json.dumps(teams),
+        players_json=json.dumps(players),
     )
 
 
 @app.route("/players")
 def players_page():
-    """Rosters with search and role filtering (Bowler, Batsman, Allrounder, Wicketkeeper)."""
+    """Rosters with search, set filtering, and DSA sorting (Merge Sort & Quick Sort)."""
     role_filter = request.args.get("role", "").strip()
+    set_filter = request.args.get("set", "").strip()
+    sort_filter = request.args.get("sort", "").strip()
     search_query = request.args.get("q", "").strip()
 
     if search_query:
@@ -101,11 +133,31 @@ def players_page():
     else:
         players = read_all_players()
 
+    if set_filter and set_filter != "ALL":
+        players = [p for p in players if p.get("set_code") == set_filter]
+
+    # DSA Sorting options
+    if sort_filter == "runs":
+        # Merge Sort (Divide & Conquer)
+        from dsa.merge_sort import merge_sort
+        players = merge_sort(players, key="runs", descending=True)
+    elif sort_filter == "avg":
+        # Quick Sort (Pivot Partitioning)
+        from dsa.quick_sort import quick_sort
+        players = quick_sort(players, key="batting_avg", descending=True)
+    elif sort_filter == "price":
+        players = sorted(players, key=lambda x: x.get("base_price", 0), reverse=True)
+
+    auction_sets = get_auction_sets()
+
     return render_template(
         "players.html",
         players=players,
         active_role=role_filter,
-        search_query=search_query
+        active_set=set_filter,
+        active_sort=sort_filter,
+        search_query=search_query,
+        auction_sets=auction_sets
     )
 
 
@@ -121,7 +173,7 @@ def player_detail(player_id):
 
 @app.route("/player/add", methods=["GET", "POST"])
 def add_player_page():
-    """CRUD: Create - Add new player."""
+    """CRUD: Create - Register a new player with base price category and set."""
     if request.method == "POST":
         try:
             name = request.form.get("name")
@@ -149,10 +201,10 @@ def add_player_page():
                 centuries=centuries, fifties=fifties, wickets=wickets,
                 bowling_economy=bowling_economy, bowling_avg=bowling_avg
             )
-            flash(f"Player '{name}' added successfully with ID #{pid}!", "success")
+            flash(f"Player '{name}' registered successfully with ID #{pid}!", "success")
             return redirect(url_for("player_detail", player_id=pid))
         except Exception as e:
-            flash(f"Error adding player: {e}", "error")
+            flash(f"Error registering player: {e}", "error")
 
     return render_template("add_player.html")
 
@@ -200,54 +252,135 @@ def delete_player_action(player_id):
 
 @app.route("/teams")
 def teams_page():
-    """Teams & Budget Overview + Purchased squads."""
-    teams = get_team_budget_overview()
+    """Franchise Squads, Purse Tracking, Retentions & RTM Cards."""
+    teams = read_all_teams()
     selected_code = request.args.get("team", "CSK").strip().upper()
     squad_data = get_team_purchased_players(selected_code)
+    current_mode = get_auction_mode()
     return render_template(
         "teams.html",
         teams=teams,
         selected_code=selected_code,
-        squad_data=squad_data
+        squad_data=squad_data,
+        current_mode=current_mode
     )
 
 
 @app.route("/auction")
 def auction_page():
-    """Live interactive IPL Mega Auction Arena matching Image 2 & 4."""
-    pool = get_available_players_pool()
+    """
+    Live Interactive TATA IPL Mega Auction Arena:
+    - 3D Floating Drone Pod
+    - Sequential Sets filtering (BA1, AL1, WK1, FA1, SP1, UN1)
+    - Increments: <1Cr: +10L, 1-2Cr: +20L, 2-5Cr: +25L, 5-10Cr: +50L, >10Cr: +1Cr
+    - Right-To-Match (RTM) Card Challenge Prompts for Former Teams
+    - Accelerated Round Mode
+    - Strict Squad Limits (18-25) & Overseas Cap (max 8)
+    """
+    set_code = request.args.get("set", "ALL").strip()
+    is_accelerated = request.args.get("accelerated", "0") == "1"
+
+    pool = get_available_players_pool(set_code=set_code if set_code != "ALL" else None, accelerated_only=is_accelerated)
     stats = get_auction_stats()
     teams = read_all_teams()
+    auction_sets = get_auction_sets()
+    current_mode = get_auction_mode()
+
     return render_template(
         "auction.html",
         pool=pool,
         stats=stats,
         teams=teams,
+        auction_sets=auction_sets,
+        active_set=set_code,
+        is_accelerated=is_accelerated,
+        current_mode=current_mode,
         pool_json=json.dumps(pool),
         teams_json=json.dumps(teams),
     )
 
 
+# ============================================================================
+# REAL-TIME AUCTION & RTM APIS
+# ============================================================================
+
+@app.route("/api/auction/mode", methods=["POST"])
+def api_set_auction_mode():
+    """Toggles between Mega Auction and Mini Auction."""
+    data = request.get_json() or {}
+    mode = data.get("mode", "mega")
+    new_mode = set_auction_mode(mode)
+    teams = read_all_teams()
+    return jsonify({
+        "success": True,
+        "mode": new_mode,
+        "message": f"Switched to {'TATA IPL Mega Auction (RTM Active)' if new_mode == 'mega' else 'IPL Mini Auction (0 RTM Cards)'}",
+        "teams": teams
+    })
+
+
 @app.route("/api/auction/simulate_next", methods=["POST"])
 def api_auction_simulate_next():
-    """Simulates next player bidding battle."""
-    pool = get_available_players_pool()
+    """Simulates next player bidding battle with RTM handling."""
+    data = request.get_json() or {}
+    set_code = data.get("set_code")
+    is_accelerated = data.get("accelerated", False)
+
+    pool = get_available_players_pool(set_code=set_code if set_code != "ALL" else None, accelerated_only=is_accelerated)
     if not pool:
-        return jsonify({"success": False, "message": "No available players in pool."})
+        return jsonify({"success": False, "message": "No available players in selected pool/set."})
 
     player = pool[0]
-    status, winner, price = run_player_auction(player)
+    status, winner, price, rtm_team = run_player_auction(player)
 
     return jsonify({
         "success": True,
         "player_id": player["player_id"],
         "player_name": player["name"],
+        "role": player["role"],
+        "country": player["country"],
+        "set_code": player.get("set_code", "BA1"),
         "status": status,
         "winning_team": winner["team_name"] if winner else "None",
         "winning_code": winner["short_code"] if winner else "UNSOLD",
         "sold_price": price,
         "sold_price_fmt": format_currency(price),
+        "rtm_invoked": rtm_team is not None,
+        "rtm_team": rtm_team["short_code"] if rtm_team else None
     })
+
+
+@app.route("/api/auction/check_rtm", methods=["POST"])
+def api_check_rtm():
+    """Checks if former franchise is eligible to invoke RTM Card."""
+    data = request.get_json() or {}
+    player_id = int(data.get("player_id", 0))
+    winning_team_id = int(data.get("winning_team_id", 0))
+
+    eligible, former_team, message = check_rtm_eligibility(player_id, winning_team_id)
+    return jsonify({
+        "eligible": eligible,
+        "former_team": former_team,
+        "message": message
+    })
+
+
+@app.route("/api/auction/execute_rtm", methods=["POST"])
+def api_execute_rtm():
+    """Executes RTM Card match by former team."""
+    data = request.get_json() or {}
+    player_id = int(data.get("player_id", 0))
+    former_team_id = int(data.get("former_team_id", 0))
+    final_price = float(data.get("final_price", 0.0))
+
+    if player_id and former_team_id and final_price > 0:
+        success = execute_rtm_claim(player_id, former_team_id, final_price)
+        if success:
+            return jsonify({"success": True, "message": "RTM Card successfully exercised! Player retained!"})
+        else:
+            return jsonify({"success": False, "message": "Could not complete RTM transaction."})
+
+    return jsonify({"success": False, "message": "Invalid RTM parameters."})
 
 
 @app.route("/api/auction/record_manual_bid", methods=["POST"])
@@ -259,6 +392,14 @@ def api_auction_record_manual():
     sold_price = float(data.get("sold_price", 0.0))
 
     if player_id and team_id and sold_price > 0:
+        # Validate squad constraints
+        team = get_team_by_id(team_id)
+        player = find_player_by_id(player_id)
+        if team and player:
+            can_bid, reason = validate_team_bid(team, player, sold_price)
+            if not can_bid:
+                return jsonify({"success": False, "message": reason})
+
         success = record_winning_bid(player_id, team_id, sold_price)
         if success:
             return jsonify({"success": True, "message": "Winning bid recorded!"})
@@ -271,17 +412,28 @@ def api_auction_record_manual():
     return jsonify({"success": False, "message": "Invalid bid parameters."})
 
 
+@app.route("/api/auction/shortlist_accelerated", methods=["POST"])
+def api_shortlist_accelerated():
+    """Adds an unsold player to the Accelerated Auction shortlist."""
+    data = request.get_json() or {}
+    player_id = int(data.get("player_id", 0))
+    if player_id:
+        success = add_to_accelerated_shortlist(player_id)
+        return jsonify({"success": success, "message": "Added to Accelerated Auction Round!"})
+    return jsonify({"success": False, "message": "Player ID required."})
+
+
 @app.route("/api/auction/reset", methods=["POST"])
 def api_auction_reset():
     """Reset entire auction state."""
     reset_entire_auction()
-    flash("Auction state reset! All ₹120 Cr purses restored.", "success")
+    flash("Auction state reset! All purses and RTM cards restored.", "success")
     return redirect(url_for("auction_page"))
 
 
 if __name__ == "__main__":
     print("\n=======================================================")
-    print("🚀 IPL Auction Broadcast Arena is starting!")
+    print("🚀 TATA IPL Mega Auction Command Center is starting!")
     print("🌐 Open http://127.0.0.1:5000 in your browser.")
     print("=======================================================\n")
     app.run(debug=True, port=5000)

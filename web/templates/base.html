@@ -38,14 +38,11 @@
                 </div>
             </a>
             <nav class="nav-links">
-                <a href="/" class="nav-item {% if request.path == '/' %}active{% endif %}">📊 Batting & Team Analytics</a>
-                <a href="/players" class="nav-item {% if request.path == '/players' %}active{% endif %}">👥 All Players</a>
-                <a href="/players?role=Bowler" class="nav-item">⚡ Bowlers</a>
-                <a href="/players?role=Batsman" class="nav-item">🏏 Batsmen</a>
-                <a href="/players?role=Allrounder" class="nav-item">🔥 Allrounders</a>
-                <a href="/teams" class="nav-item {% if request.path == '/teams' %}active{% endif %}">🏆 Franchises & Purse</a>
-                <a href="/auction" class="btn-auction-nav {% if request.path == '/auction' %}active-auction{% endif %}">🔨 MEGA AUCTION ARENA</a>
-                <a href="/player/add" class="btn-add-nav">+ Add Player</a>
+                <a href="/" class="nav-item {% if request.path == '/' %}active{% endif %}">🏛️ Pre-Auction & Hub</a>
+                <a href="/auction" class="btn-auction-nav {% if request.path == '/auction' %}active-auction{% endif %}">🔨 LIVE AUCTION ARENA</a>
+                <a href="/players" class="nav-item {% if request.path == '/players' %}active{% endif %}">👥 Player Pool & Sets</a>
+                <a href="/teams" class="nav-item {% if request.path == '/teams' %}active{% endif %}">🏆 Franchises, Purse & RTM</a>
+                <a href="/player/add" class="btn-add-nav">+ Register Player</a>
             </nav>
         </div>
     </header>
@@ -68,8 +65,8 @@
 
     <footer class="footer">
         <div class="footer-container">
-            <div class="footer-ipl-badge">TATA IPL OFFICIAL AUCTION ENGINE</div>
-            <p class="footer-cs-text">Computer Science Fundamentals: <strong>Lists • Dictionaries • Loops • Merge Sort (O(n log n)) • Quick Sort (O(n log n)) • Relational SQL (PK & FK) • CRUD</strong></p>
+            <div class="footer-ipl-badge">TATA IPL OFFICIAL AUCTION ENGINE • MEGA AUCTION 2026</div>
+            <p class="footer-official-text">Official BCCI Guidelines: Fixed ₹120 Cr Purse • Squads 18–25 Players • Max 8 Overseas • RTM Rules Active</p>
         </div>
     </footer>
 </body>

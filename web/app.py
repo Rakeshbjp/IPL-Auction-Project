@@ -93,7 +93,11 @@ def dashboard():
     total_retention_spend = sum(t.get("retention_spend", 0.0) for t in teams)
     total_rtm_cards_available = sum(t.get("rtm_cards", 0) for t in teams)
 
-    # Separate Capped and Uncapped player pools
+    # Separate players by role and category
+    batters = [p for p in players if p.get("role") == "Batsman"]
+    bowlers = [p for p in players if p.get("role") == "Bowler"]
+    allrounders = [p for p in players if p.get("role") == "Allrounder"]
+    wicketkeepers = [p for p in players if p.get("role") == "Wicketkeeper"]
     capped_players = [p for p in players if p.get("is_capped", 1) == 1]
     uncapped_players = [p for p in players if p.get("is_capped", 1) == 0]
 
@@ -108,14 +112,29 @@ def dashboard():
         "uncapped_20_l": len([p for p in players if p.get("base_price") == 2000000.0]),
     }
 
+    category_counts = {
+        "total": len(players),
+        "batters": len(batters),
+        "bowlers": len(bowlers),
+        "allrounders": len(allrounders),
+        "wicketkeepers": len(wicketkeepers),
+        "capped": len(capped_players),
+        "uncapped": len(uncapped_players),
+    }
+
     db_engine = "Supabase PostgreSQL" if (DB_MODE == "supabase" and is_supabase_configured()) else "SQLite3 (Relational)"
 
     return render_template(
         "index.html",
         teams=teams,
         players=players,
+        batters=batters,
+        bowlers=bowlers,
+        allrounders=allrounders,
+        wicketkeepers=wicketkeepers,
         capped_players=capped_players,
         uncapped_players=uncapped_players,
+        category_counts=category_counts,
         auction_sets=auction_sets,
         auction_stats=auction_stats,
         unsold_players=unsold_players,
@@ -128,6 +147,10 @@ def dashboard():
         db_engine=db_engine,
         teams_json=json.dumps(teams),
         players_json=json.dumps(players),
+        batters_json=json.dumps(batters),
+        bowlers_json=json.dumps(bowlers),
+        allrounders_json=json.dumps(allrounders),
+        wicketkeepers_json=json.dumps(wicketkeepers),
         capped_players_json=json.dumps(capped_players),
         uncapped_players_json=json.dumps(uncapped_players),
     )
@@ -135,19 +158,21 @@ def dashboard():
 
 @app.route("/players")
 def players_page():
-    """Rosters with search, capped/uncapped filtering, and DSA sorting (Merge Sort & Quick Sort by Base Price)."""
+    """Rosters with search, categorized separation (Batters, Bowlers, Allrounders, Wicketkeepers, Capped, Uncapped) and sorting."""
     role_filter = request.args.get("role", "").strip()
     set_filter = request.args.get("set", "").strip()
     sort_filter = request.args.get("sort", "").strip()
     cap_filter = request.args.get("cap", "all").strip().lower()
     search_query = request.args.get("q", "").strip()
 
+    all_players = read_all_players()
+
     if search_query:
         players = find_player_by_name(search_query)
     elif role_filter:
         players = read_players_by_role(role_filter)
     else:
-        players = read_all_players()
+        players = all_players.copy()
 
     if cap_filter == "capped":
         players = [p for p in players if p.get("is_capped", 1) == 1]
@@ -157,31 +182,49 @@ def players_page():
     if set_filter and set_filter != "ALL":
         players = [p for p in players if p.get("set_code") == set_filter]
 
-    # DSA Sorting options using Merge Sort & Quick Sort by Base Price, Runs, or Avg
-    if sort_filter == "mergesort_price":
+    # Category counts
+    category_counts = {
+        "all": len(all_players),
+        "capped": len([p for p in all_players if p.get("is_capped", 1) == 1]),
+        "uncapped": len([p for p in all_players if p.get("is_capped", 1) == 0]),
+        "batters": len([p for p in all_players if p.get("role") == "Batsman"]),
+        "bowlers": len([p for p in all_players if p.get("role") == "Bowler"]),
+        "allrounders": len([p for p in all_players if p.get("role") == "Allrounder"]),
+        "wicketkeepers": len([p for p in all_players if p.get("role") == "Wicketkeeper"]),
+    }
+
+    # Sorting options using authentic IPL terms
+    if sort_filter in ("mergesort_price", "price_desc"):
         from dsa.merge_sort import merge_sort
         players = merge_sort(players, key="base_price", descending=True)
-    elif sort_filter == "mergesort_price_asc":
+    elif sort_filter in ("mergesort_price_asc", "price_asc"):
         from dsa.merge_sort import merge_sort
         players = merge_sort(players, key="base_price", descending=False)
-    elif sort_filter == "quicksort_price":
+    elif sort_filter in ("quicksort_price",):
         from dsa.quick_sort import quick_sort
         players = quick_sort(players, key="base_price", descending=True)
-    elif sort_filter == "quicksort_price_asc":
+    elif sort_filter in ("quicksort_price_asc",):
         from dsa.quick_sort import quick_sort
         players = quick_sort(players, key="base_price", descending=False)
     elif sort_filter == "runs":
         from dsa.merge_sort import merge_sort
         players = merge_sort(players, key="runs", descending=True)
+    elif sort_filter == "wickets":
+        from dsa.merge_sort import merge_sort
+        players = merge_sort(players, key="wickets", descending=True)
     elif sort_filter == "avg":
         from dsa.quick_sort import quick_sort
         players = quick_sort(players, key="batting_avg", descending=True)
+    elif sort_filter == "strike_rate":
+        from dsa.quick_sort import quick_sort
+        players = quick_sort(players, key="strike_rate", descending=True)
 
     auction_sets = get_auction_sets()
 
     return render_template(
         "players.html",
         players=players,
+        category_counts=category_counts,
         active_role=role_filter,
         active_set=set_filter,
         active_sort=sort_filter,

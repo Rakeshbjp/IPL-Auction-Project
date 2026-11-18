@@ -130,7 +130,7 @@ def run_all_tests():
     assert len(pool) > 0, "Auction pool is empty"
     first_player = pool[0]
 
-    status, winner, price = run_player_auction(first_player)
+    status, winner, price, _ = run_player_auction(first_player)
     assert status == "Sold" and winner is not None and price > 0
     print(f"  ✓ Auctioned {first_player['name']}: SOLD to {winner['team_name']} ({winner['short_code']}) for {format_currency(price)}")
 
@@ -143,7 +143,7 @@ def run_all_tests():
     budgets = get_team_budget_overview()
     assert len(budgets) == 10, f"Expected 10 IPL franchises, got {len(budgets)}"
     team_in_budgets = [t for t in budgets if t["team_id"] == winner["team_id"]][0]
-    expected_remaining = team_in_budgets["total_budget"] - price
+    expected_remaining = team_in_budgets["total_budget"] - team_in_budgets.get("retention_spend", 0.0) - price
     assert abs(team_in_budgets["remaining_budget"] - expected_remaining) < 1.0, "Budget calculation mismatch!"
     print(f"  ✓ Remaining Purse for {winner['short_code']}: {team_in_budgets['remaining_budget_fmt']} (Exact match)")
 

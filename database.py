@@ -258,13 +258,17 @@ def _seed_initial_data(conn: sqlite3.Connection) -> None:
             ))
         conn.commit()
 
-    # Check if players exist
-    cursor.execute("SELECT COUNT(*) FROM players;")
-    player_count = cursor.fetchone()[0]
+    # Seed / synchronize players and stats
+    cursor.execute("SELECT name FROM players;")
+    existing_player_names = {r[0] for r in cursor.fetchall()}
 
-    if player_count == 0:
-        for p in INITIAL_PLAYERS:
-            is_os = 1 if p.get("country", "India") != "India" else 0
+    for p in INITIAL_PLAYERS:
+        name = p["name"]
+        is_os = 1 if p.get("country", "India") != "India" else 0
+        is_cap = 1 if p.get("is_capped", True) else 0
+        stats = p.get("stats", {})
+
+        if name not in existing_player_names:
             cursor.execute("""
             INSERT INTO players (
                 name, role, country, base_price, sold_price, status, team_id,
@@ -277,12 +281,11 @@ def _seed_initial_data(conn: sqlite3.Connection) -> None:
                 p["base_price"],
                 p.get("set_name", "Set 1: Capped Batters (BA1)"),
                 p.get("set_code", "BA1"),
-                1 if p.get("is_capped", True) else 0,
+                is_cap,
                 is_os,
                 p.get("former_team"),
             ))
             player_id = cursor.lastrowid
-            stats = p["stats"]
 
             cursor.execute("""
             INSERT INTO player_stats (
@@ -304,13 +307,12 @@ def _seed_initial_data(conn: sqlite3.Connection) -> None:
                 stats.get("bowling_economy", 0.0),
                 stats.get("bowling_avg", 0.0)
             ))
-        conn.commit()
-    else:
-        # Update existing players with set info, former team, overseas flag
-        for p in INITIAL_PLAYERS:
-            is_os = 1 if p.get("country", "India") != "India" else 0
+        else:
             cursor.execute("""
             UPDATE players SET
+                role = ?,
+                country = ?,
+                base_price = ?,
                 set_name = ?,
                 set_code = ?,
                 is_capped = ?,
@@ -318,14 +320,38 @@ def _seed_initial_data(conn: sqlite3.Connection) -> None:
                 former_team = ?
             WHERE name = ?;
             """, (
+                p["role"],
+                p["country"],
+                p["base_price"],
                 p.get("set_name", "Set 1: Capped Batters (BA1)"),
                 p.get("set_code", "BA1"),
-                1 if p.get("is_capped", True) else 0,
+                is_cap,
                 is_os,
                 p.get("former_team"),
                 p["name"]
             ))
-        conn.commit()
+            cursor.execute("""
+            UPDATE player_stats SET
+                matches = ?, runs = ?, highest_score = ?, batting_avg = ?,
+                strike_rate = ?, fours = ?, sixes = ?, centuries = ?,
+                fifties = ?, wickets = ?, bowling_economy = ?, bowling_avg = ?
+            WHERE player_id = (SELECT player_id FROM players WHERE name = ?);
+            """, (
+                stats.get("matches", 0),
+                stats.get("runs", 0),
+                stats.get("highest_score", 0),
+                stats.get("batting_avg", 0.0),
+                stats.get("strike_rate", 0.0),
+                stats.get("fours", 0),
+                stats.get("sixes", 0),
+                stats.get("centuries", 0),
+                stats.get("fifties", 0),
+                stats.get("wickets", 0),
+                stats.get("bowling_economy", 0.0),
+                stats.get("bowling_avg", 0.0),
+                p["name"]
+            ))
+    conn.commit()
 
 
 def row_to_dict(row: sqlite3.Row) -> Dict[str, Any]:

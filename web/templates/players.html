@@ -21,15 +21,15 @@
         <div class="filter-buttons-cluster">
             <a href="/players?cap=all{% if active_role %}&role={{ active_role }}{% endif %}{% if active_sort %}&sort={{ active_sort }}{% endif %}" 
                class="btn-filter-pill {% if active_cap == 'all' or not active_cap %}active-pill{% endif %}">
-                👥 All Players
+                👥 All Players ({{ category_counts.all }})
             </a>
             <a href="/players?cap=capped{% if active_role %}&role={{ active_role }}{% endif %}{% if active_sort %}&sort={{ active_sort }}{% endif %}" 
                class="btn-filter-pill {% if active_cap == 'capped' %}active-pill{% endif %}">
-                🧢 Capped Players (Marquee Stars)
+                🧢 Capped Players ({{ category_counts.capped }})
             </a>
             <a href="/players?cap=uncapped{% if active_role %}&role={{ active_role }}{% endif %}{% if active_sort %}&sort={{ active_sort }}{% endif %}" 
                class="btn-filter-pill {% if active_cap == 'uncapped' %}active-pill{% endif %}">
-                🌟 Uncapped Players (Emerging Talent)
+                🌟 Uncapped Players ({{ category_counts.uncapped }})
             </a>
         </div>
     </div>
@@ -40,23 +40,23 @@
         <div class="filter-buttons-cluster">
             <a href="/players{% if active_cap %}&cap={{ active_cap }}{% endif %}{% if active_sort %}&sort={{ active_sort }}{% endif %}" 
                class="btn-filter-pill {% if not active_role and not search_query %}active-pill{% endif %}">
-                All Roles
+                All Roles ({{ category_counts.all }})
             </a>
             <a href="/players?role=Batsman{% if active_cap %}&cap={{ active_cap }}{% endif %}{% if active_sort %}&sort={{ active_sort }}{% endif %}" 
                class="btn-filter-pill {% if active_role == 'Batsman' %}active-pill{% endif %}">
-                🏏 Batters
-            </a>
-            <a href="/players?role=Allrounder{% if active_cap %}&cap={{ active_cap }}{% endif %}{% if active_sort %}&sort={{ active_sort }}{% endif %}" 
-               class="btn-filter-pill {% if active_role == 'Allrounder' %}active-pill{% endif %}">
-                🔥 All-rounders
-            </a>
-            <a href="/players?role=Wicketkeeper{% if active_cap %}&cap={{ active_cap }}{% endif %}{% if active_sort %}&sort={{ active_sort }}{% endif %}" 
-               class="btn-filter-pill {% if active_role == 'Wicketkeeper' %}active-pill{% endif %}">
-                🧤 Wicketkeepers
+                🏏 Batters ({{ category_counts.batters }})
             </a>
             <a href="/players?role=Bowler{% if active_cap %}&cap={{ active_cap }}{% endif %}{% if active_sort %}&sort={{ active_sort }}{% endif %}" 
                class="btn-filter-pill {% if active_role == 'Bowler' %}active-pill{% endif %}">
-                ⚡ Bowlers
+                ⚡ Bowlers ({{ category_counts.bowlers }})
+            </a>
+            <a href="/players?role=Allrounder{% if active_cap %}&cap={{ active_cap }}{% endif %}{% if active_sort %}&sort={{ active_sort }}{% endif %}" 
+               class="btn-filter-pill {% if active_role == 'Allrounder' %}active-pill{% endif %}">
+                🔥 All-rounders ({{ category_counts.allrounders }})
+            </a>
+            <a href="/players?role=Wicketkeeper{% if active_cap %}&cap={{ active_cap }}{% endif %}{% if active_sort %}&sort={{ active_sort }}{% endif %}" 
+               class="btn-filter-pill {% if active_role == 'Wicketkeeper' %}active-pill{% endif %}">
+                🧤 Wicketkeepers ({{ category_counts.wicketkeepers }})
             </a>
         </div>
     </div>
@@ -84,31 +84,43 @@
         <div class="sort-technique-buttons">
             <span class="sort-label">Auction Rankings:</span>
             <a href="/players?sort=mergesort_price{% if active_cap %}&cap={{ active_cap }}{% endif %}{% if active_role %}&role={{ active_role }}{% endif %}" 
-               class="btn-sort-technique {% if active_sort == 'mergesort_price' %}active-sort{% endif %}">
+               class="btn-sort-technique {% if active_sort == 'mergesort_price' or active_sort == 'price_desc' %}active-sort{% endif %}">
                 💰 Highest Base Price (Top Tier)
             </a>
             <a href="/players?sort=mergesort_price_asc{% if active_cap %}&cap={{ active_cap }}{% endif %}{% if active_role %}&role={{ active_role }}{% endif %}" 
-               class="btn-sort-technique {% if active_sort == 'mergesort_price_asc' %}active-sort{% endif %}">
+               class="btn-sort-technique {% if active_sort == 'mergesort_price_asc' or active_sort == 'price_asc' %}active-sort{% endif %}">
                 🏷️ Lowest Base Price (Budget Picks)
             </a>
             <a href="/players?sort=runs{% if active_cap %}&cap={{ active_cap }}{% endif %}{% if active_role %}&role={{ active_role }}{% endif %}" 
                class="btn-sort-technique {% if active_sort == 'runs' %}active-sort{% endif %}">
                 🏏 Most Career Runs (Orange Cap)
             </a>
+            <a href="/players?sort=wickets{% if active_cap %}&cap={{ active_cap }}{% endif %}{% if active_role %}&role={{ active_role }}{% endif %}" 
+               class="btn-sort-technique {% if active_sort == 'wickets' %}active-sort{% endif %}">
+                ⚡ Top Wickets (Purple Cap)
+            </a>
             <a href="/players?sort=avg{% if active_cap %}&cap={{ active_cap }}{% endif %}{% if active_role %}&role={{ active_role }}{% endif %}" 
                class="btn-sort-technique {% if active_sort == 'avg' %}active-sort{% endif %}">
-                ⚡ Best Batting Average
+                🎯 Best Batting Average
+            </a>
+            <a href="/players?sort=strike_rate{% if active_cap %}&cap={{ active_cap }}{% endif %}{% if active_role %}&role={{ active_role }}{% endif %}" 
+               class="btn-sort-technique {% if active_sort == 'strike_rate' %}active-sort{% endif %}">
+                🚀 Highest Strike Rate
             </a>
         </div>
         <div class="algo-execution-badge">
-            {% if active_sort == 'mergesort_price' %}
+            {% if active_sort in ('mergesort_price', 'price_desc') %}
                 ✅ Sorted: Highest Base Price Tier First
-            {% elif active_sort == 'mergesort_price_asc' %}
+            {% elif active_sort in ('mergesort_price_asc', 'price_asc') %}
                 ✅ Sorted: Budget Base Price Tier First
             {% elif active_sort == 'runs' %}
                 ✅ Sorted: Most Career Runs Leaderboard
+            {% elif active_sort == 'wickets' %}
+                ✅ Sorted: Most Career Wickets Leaderboard
             {% elif active_sort == 'avg' %}
                 ✅ Sorted: Highest Career Batting Average
+            {% elif active_sort == 'strike_rate' %}
+                ✅ Sorted: Highest Scoring Velocity (Strike Rate)
             {% else %}
                 ⚡ Official BCCI Auction Listing
             {% endif %}

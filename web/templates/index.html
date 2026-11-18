@@ -207,176 +207,209 @@
     </section>
 
     <!-- =========================================================================
-         STAGE 3: TWO LISTS - CAPPED PLAYERS & UNCAPPED PLAYERS (CLEAN AUCTION TERMS)
+         STAGE 3: OFFICIAL PLAYER POOLS - SEPARATED BY BATTERS, BOWLERS, ALL-ROUNDERS, WICKETKEEPERS, CAPPED & UNCAPPED
          ========================================================================= -->
+    {% macro render_pool_table(pool_id, pool_players, default_algo_label) %}
+    <div id="section-{{ pool_id }}-players" class="category-player-section" {% if pool_id != 'batters' %}style="display: none;"{% endif %}>
+        <div class="sort-technique-bar">
+            <div class="sort-technique-buttons">
+                <span class="sort-label">Auction Rankings:</span>
+                <button type="button" class="btn-sort-technique" onclick="sortCategorySection('{{ pool_id }}', 'price', false)">
+                    💰 Highest Base Price (Top Tier)
+                </button>
+                <button type="button" class="btn-sort-technique" onclick="sortCategorySection('{{ pool_id }}', 'price', true)">
+                    🏷️ Lowest Base Price (Budget Tier)
+                </button>
+                <button type="button" class="btn-sort-technique" onclick="sortCategorySection('{{ pool_id }}', 'runs', false)">
+                    🏏 Most Career Runs (Orange Cap)
+                </button>
+                <button type="button" class="btn-sort-technique" onclick="sortCategorySection('{{ pool_id }}', 'wickets', false)">
+                    ⚡ Top Wickets (Purple Cap)
+                </button>
+                <button type="button" class="btn-sort-technique" onclick="sortCategorySection('{{ pool_id }}', 'avg', false)">
+                    🎯 Best Batting Average
+                </button>
+                <button type="button" class="btn-sort-technique" onclick="sortCategorySection('{{ pool_id }}', 'sr', false)">
+                    🚀 Highest Strike Rate
+                </button>
+                <button type="button" class="btn-sort-technique" onclick="toggleCategoryDirection('{{ pool_id }}')">
+                    ↕️ Toggle High / Low
+                </button>
+            </div>
+            <div class="algo-execution-badge" id="badge-{{ pool_id }}-algo">
+                {{ default_algo_label }}
+            </div>
+        </div>
+
+        <!-- Players Table -->
+        <div class="matrix-table-card">
+            <div class="table-responsive">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Player Name</th>
+                            <th>Role</th>
+                            <th>Country</th>
+                            <th class="text-center">Set Code</th>
+                            <th class="text-center">Former Team (RTM)</th>
+                            <th class="text-right">Matches</th>
+                            <th class="text-right">Runs</th>
+                            <th class="text-right">Wickets</th>
+                            <th class="text-right">Avg / SR</th>
+                            <th class="text-right">Base Price</th>
+                            <th class="text-center">Status</th>
+                            <th class="text-center">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tbody-{{ pool_id }}-players">
+                        {% for p in pool_players %}
+                        <tr data-price="{{ p.base_price }}"
+                            data-runs="{{ p.runs or 0 }}"
+                            data-wickets="{{ p.wickets or 0 }}"
+                            data-avg="{{ p.batting_avg or 0 }}"
+                            data-sr="{{ p.strike_rate or 0 }}"
+                            data-matches="{{ p.matches or 0 }}">
+                            <td>
+                                <strong>{{ p.name }}</strong>
+                                {% if p.is_overseas %}
+                                    <span class="badge badge-overseas ml-1">✈️ Overseas</span>
+                                {% endif %}
+                                {% if not p.is_capped %}
+                                    <span class="badge badge-warning ml-1">🌟 Uncapped</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ p.role }}</td>
+                            <td>{{ p.country }}</td>
+                            <td class="text-center">
+                                <span class="set-code-badge">{{ p.set_code or 'BA1' }}</span>
+                            </td>
+                            <td class="text-center">
+                                {% if p.former_team %}
+                                    <span class="team-badge-cell team-bg-{{ p.former_team|lower }}">{{ p.former_team }}</span>
+                                {% else %}
+                                    <span class="text-muted text-xs">—</span>
+                                {% endif %}
+                            </td>
+                            <td class="text-right">{{ p.matches or 0 }}</td>
+                            <td class="text-right font-bold">{{ "{:,}".format(p.runs or 0) }}</td>
+                            <td class="text-right color-red font-bold">{{ p.wickets or 0 }}</td>
+                            <td class="text-right">
+                                <span class="font-bold">{{ "%.1f"|format(p.batting_avg or 0) }}</span>
+                                <span class="text-xs text-muted block">SR: {{ "%.1f"|format(p.strike_rate or 0) }}</span>
+                            </td>
+                            <td class="text-right font-bold color-gold">{{ format_currency(p.base_price) }}</td>
+                            <td class="text-center">
+                                <span class="badge badge-{{ (p.status or 'Available')|lower }}">{{ p.status or 'Available' }}</span>
+                            </td>
+                            <td class="text-center">
+                                <a href="/player/{{ p.player_id }}" class="btn btn-outline btn-xs">Profile</a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    {% endmacro %}
+
     <section class="stage-section">
         <div class="stage-section-header">
             <div class="stage-title">
-                <span>👥 STAGE 3: CAPPED PLAYERS & UNCAPPED PLAYERS POOLS</span>
-                <span class="stage-badge">OFFICIAL AUCTION CATEGORIES & VALUATIONS</span>
+                <span>👥 STAGE 3: OFFICIAL PLAYER POOLS & SPECIALIZATION SQUADS</span>
+                <span class="stage-badge">SEPARATED & RANKED BY OFFICIAL AUCTION VALUATIONS</span>
             </div>
-            <div>
+            <div style="display: flex; gap: 0.5rem;">
+                <a href="/players" class="btn btn-outline btn-xs">📋 Full Roster Hub</a>
                 <a href="/player/add" class="btn btn-primary btn-xs">+ Register New Player</a>
             </div>
         </div>
 
-        <!-- 2) DUAL LIST TABS: CAPPED PLAYERS & UNCAPPED PLAYERS -->
-        <div class="cap-tabs-container">
-            <button type="button" class="cap-tab-btn active-cap-tab" id="tab-btn-capped" onclick="switchCapTab('capped')">
-                🧢 Capped Players List ({{ capped_players|length }})
+        <!-- 6 Interactive Category Stat Cards -->
+        <div class="preauction-kpi-grid" style="grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); margin-bottom: 1.5rem;">
+            <div class="preauction-kpi-card" onclick="switchCategoryTab('batters')" style="cursor: pointer; transition: transform 0.2s;" title="Click to view Batters">
+                <div class="kpi-card-icon">🏏</div>
+                <div class="kpi-card-info">
+                    <span class="kpi-card-label">Batters Pool</span>
+                    <strong class="kpi-card-value">{{ category_counts.batters }} Players</strong>
+                    <span class="kpi-card-sub">Top: Virat Kohli (8,661 runs)</span>
+                </div>
+            </div>
+            <div class="preauction-kpi-card" onclick="switchCategoryTab('bowlers')" style="cursor: pointer; transition: transform 0.2s;" title="Click to view Bowlers">
+                <div class="kpi-card-icon">⚡</div>
+                <div class="kpi-card-info">
+                    <span class="kpi-card-label">Bowlers Pool</span>
+                    <strong class="kpi-card-value">{{ category_counts.bowlers }} Players</strong>
+                    <span class="kpi-card-sub">Top: Chahal (221) / Bumrah (183)</span>
+                </div>
+            </div>
+            <div class="preauction-kpi-card" onclick="switchCategoryTab('allrounders')" style="cursor: pointer; transition: transform 0.2s;" title="Click to view All-rounders">
+                <div class="kpi-card-icon">🔥</div>
+                <div class="kpi-card-info">
+                    <span class="kpi-card-label">All-rounders</span>
+                    <strong class="kpi-card-value">{{ category_counts.allrounders }} Players</strong>
+                    <span class="kpi-card-sub">Premier: Hardik / Jadeja / Russell</span>
+                </div>
+            </div>
+            <div class="preauction-kpi-card" onclick="switchCategoryTab('wicketkeepers')" style="cursor: pointer; transition: transform 0.2s;" title="Click to view Wicketkeepers">
+                <div class="kpi-card-icon">🧤</div>
+                <div class="kpi-card-info">
+                    <span class="kpi-card-label">Wicketkeepers</span>
+                    <strong class="kpi-card-value">{{ category_counts.wicketkeepers }} Players</strong>
+                    <span class="kpi-card-sub">Glovemen: Dhoni / Pant / Samson</span>
+                </div>
+            </div>
+            <div class="preauction-kpi-card" onclick="switchCategoryTab('capped')" style="cursor: pointer; transition: transform 0.2s;" title="Click to view Capped Players">
+                <div class="kpi-card-icon">🧢</div>
+                <div class="kpi-card-info">
+                    <span class="kpi-card-label">Capped Stars</span>
+                    <strong class="kpi-card-value">{{ category_counts.capped }} Players</strong>
+                    <span class="kpi-card-sub">International Icons & Top Tier</span>
+                </div>
+            </div>
+            <div class="preauction-kpi-card" onclick="switchCategoryTab('uncapped')" style="cursor: pointer; transition: transform 0.2s;" title="Click to view Uncapped Players">
+                <div class="kpi-card-icon">🌟</div>
+                <div class="kpi-card-info">
+                    <span class="kpi-card-label">Uncapped Talents</span>
+                    <strong class="kpi-card-value">{{ category_counts.uncapped }} Players</strong>
+                    <span class="kpi-card-sub">Emerging Domestic Guns</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Category Filter Tabs Bar -->
+        <div class="cap-tabs-container" style="flex-wrap: wrap;">
+            <button type="button" class="cap-tab-btn active-cap-tab" id="tab-btn-batters" onclick="switchCategoryTab('batters')">
+                🏏 Batters ({{ category_counts.batters }})
             </button>
-            <button type="button" class="cap-tab-btn" id="tab-btn-uncapped" onclick="switchCapTab('uncapped')">
-                🌟 Uncapped Players List ({{ uncapped_players|length }})
+            <button type="button" class="cap-tab-btn" id="tab-btn-bowlers" onclick="switchCategoryTab('bowlers')">
+                ⚡ Bowlers ({{ category_counts.bowlers }})
+            </button>
+            <button type="button" class="cap-tab-btn" id="tab-btn-allrounders" onclick="switchCategoryTab('allrounders')">
+                🔥 All-rounders ({{ category_counts.allrounders }})
+            </button>
+            <button type="button" class="cap-tab-btn" id="tab-btn-wicketkeepers" onclick="switchCategoryTab('wicketkeepers')">
+                🧤 Wicketkeepers ({{ category_counts.wicketkeepers }})
+            </button>
+            <button type="button" class="cap-tab-btn" id="tab-btn-capped" onclick="switchCategoryTab('capped')">
+                🧢 Capped Players ({{ category_counts.capped }})
+            </button>
+            <button type="button" class="cap-tab-btn" id="tab-btn-uncapped" onclick="switchCategoryTab('uncapped')">
+                🌟 Uncapped Players ({{ category_counts.uncapped }})
+            </button>
+            <button type="button" class="cap-tab-btn" id="tab-btn-all" onclick="switchCategoryTab('all')">
+                👥 All Players ({{ category_counts.total }})
             </button>
         </div>
 
-        <!-- CAPPED PLAYERS SECTION (NATURAL AUCTION SORTING LABELS) -->
-        <div id="section-capped-players">
-            <div class="sort-technique-bar">
-                <div class="sort-technique-buttons">
-                    <span class="sort-label">Auction Price Order:</span>
-                    <button type="button" class="btn-sort-technique" id="btn-capped-mergesort" onclick="sortCappedPlayers('high')">
-                        💰 Highest Base Price (Top Tier)
-                    </button>
-                    <button type="button" class="btn-sort-technique" id="btn-capped-quicksort" onclick="sortCappedPlayers('low')">
-                        🏷️ Lowest Base Price (Budget Tier)
-                    </button>
-                    <button type="button" class="btn-sort-technique" id="btn-capped-toggle-dir" onclick="toggleCappedDirection()">
-                        ↕️ Toggle High / Low
-                    </button>
-                </div>
-                <div class="algo-execution-badge" id="badge-capped-algo">
-                    ⚡ Official Auction Category Valuation
-                </div>
-            </div>
-
-            <!-- Capped Players Table -->
-            <div class="matrix-table-card">
-                <div class="table-responsive">
-                    <table class="data-table">
-                        <thead>
-                            <tr>
-                                <th>Player Name</th>
-                                <th>Role</th>
-                                <th>Country</th>
-                                <th class="text-center">Set Code</th>
-                                <th class="text-center">Status</th>
-                                <th class="text-center">Former Team (RTM)</th>
-                                <th class="text-right">Base Price</th>
-                                <th class="text-right">Sold Price</th>
-                                <th class="text-center">Action</th>
-                            </tr>
-                        </thead>
-                        <tbody id="tbody-capped-players">
-                            {% for p in capped_players %}
-                            <tr data-price="{{ p.base_price }}">
-                                <td>
-                                    <strong>{{ p.name }}</strong>
-                                    {% if p.is_overseas %}<span class="badge badge-overseas ml-1">✈️ Overseas</span>{% endif %}
-                                </td>
-                                <td>{{ p.role }}</td>
-                                <td>{{ p.country }}</td>
-                                <td class="text-center">
-                                    <span class="set-code-badge">{{ p.set_code or 'BA1' }}</span>
-                                </td>
-                                <td class="text-center">
-                                    <span class="badge badge-{{ p.status|lower }}">{{ p.status }}</span>
-                                </td>
-                                <td class="text-center">
-                                    {% if p.former_team %}
-                                        <span class="team-badge-cell team-bg-{{ p.former_team|lower }}">{{ p.former_team }}</span>
-                                    {% else %}
-                                        <span class="text-muted text-xs">—</span>
-                                    {% endif %}
-                                </td>
-                                <td class="text-right font-bold color-gold">{{ format_currency(p.base_price) }}</td>
-                                <td class="text-right font-bold {% if p.sold_price > 0 %}color-green{% else %}text-muted{% endif %}">
-                                    {{ format_currency(p.sold_price) if p.sold_price > 0 else '—' }}
-                                </td>
-                                <td class="text-center">
-                                    <a href="/player/{{ p.player_id }}" class="btn btn-outline btn-xs">Profile</a>
-                                </td>
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-
-        <!-- UNCAPPED PLAYERS SECTION (NATURAL AUCTION SORTING LABELS) -->
-        <div id="section-uncapped-players" style="display: none;">
-            <div class="sort-technique-bar">
-                <div class="sort-technique-buttons">
-                    <span class="sort-label">Auction Price Order:</span>
-                    <button type="button" class="btn-sort-technique" id="btn-uncapped-mergesort" onclick="sortUncappedPlayers('high')">
-                        💰 Highest Base Price (₹50 Lakhs Tier)
-                    </button>
-                    <button type="button" class="btn-sort-technique" id="btn-uncapped-quicksort" onclick="sortUncappedPlayers('low')">
-                        🏷️ Lowest Base Price (₹20 Lakhs Tier)
-                    </button>
-                    <button type="button" class="btn-sort-technique" id="btn-uncapped-toggle-dir" onclick="toggleUncappedDirection()">
-                        ↕️ Toggle High / Low
-                    </button>
-                </div>
-                <div class="algo-execution-badge" id="badge-uncapped-algo">
-                    ⚡ Emerging Talent Auction Ranking
-                </div>
-            </div>
-
-            <!-- Uncapped Players Table -->
-            <div class="matrix-table-card">
-                <div class="table-responsive">
-                    <table class="data-table">
-                        <thead>
-                            <tr>
-                                <th>Player Name</th>
-                                <th>Role</th>
-                                <th>Country</th>
-                                <th class="text-center">Set Code</th>
-                                <th class="text-center">Status</th>
-                                <th class="text-center">Former Team (RTM)</th>
-                                <th class="text-right">Base Price</th>
-                                <th class="text-right">Sold Price</th>
-                                <th class="text-center">Action</th>
-                            </tr>
-                        </thead>
-                        <tbody id="tbody-uncapped-players">
-                            {% for p in uncapped_players %}
-                            <tr data-price="{{ p.base_price }}">
-                                <td>
-                                    <strong>{{ p.name }}</strong>
-                                    <span class="badge badge-warning ml-1">🌟 Uncapped</span>
-                                </td>
-                                <td>{{ p.role }}</td>
-                                <td>{{ p.country }}</td>
-                                <td class="text-center">
-                                    <span class="set-code-badge">{{ p.set_code or 'UN1' }}</span>
-                                </td>
-                                <td class="text-center">
-                                    <span class="badge badge-{{ p.status|lower }}">{{ p.status }}</span>
-                                </td>
-                                <td class="text-center">
-                                    {% if p.former_team %}
-                                        <span class="team-badge-cell team-bg-{{ p.former_team|lower }}">{{ p.former_team }}</span>
-                                    {% else %}
-                                        <span class="text-muted text-xs">—</span>
-                                    {% endif %}
-                                </td>
-                                <td class="text-right font-bold color-gold">{{ format_currency(p.base_price) }}</td>
-                                <td class="text-right font-bold {% if p.sold_price > 0 %}color-green{% else %}text-muted{% endif %}">
-                                    {{ format_currency(p.sold_price) if p.sold_price > 0 else '—' }}
-                                </td>
-                                <td class="text-center">
-                                    <a href="/player/{{ p.player_id }}" class="btn btn-outline btn-xs">Profile</a>
-                                </td>
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
+        <!-- Render each separated category table -->
+        {{ render_pool_table('batters', batters, '🏏 Premier Batters Ranked by Base Price') }}
+        {{ render_pool_table('bowlers', bowlers, '⚡ Premier Bowlers Ranked by Base Price') }}
+        {{ render_pool_table('allrounders', allrounders, '🔥 Dual-Threat All-rounders Ranked by Base Price') }}
+        {{ render_pool_table('wicketkeepers', wicketkeepers, '🧤 Elite Wicketkeeper-Batters Ranked by Base Price') }}
+        {{ render_pool_table('capped', capped_players, '🧢 Capped Marquee Stars (₹2.00 Cr - ₹75L)') }}
+        {{ render_pool_table('uncapped', uncapped_players, '🌟 Emerging Uncapped Talents (₹50L - ₹20L)') }}
+        {{ render_pool_table('all', players, '👥 Complete Registered Player Pool') }}
     </section>
 
     <!-- =========================================================================
@@ -566,22 +599,22 @@
 
 <!-- Safe Data Storage in HTML5 Templates (Zero VS Code JS Syntax Errors) -->
 <template id="tmpl-mode">{{ current_mode }}</template>
+<template id="tmpl-batters-data">{{ batters_json|safe }}</template>
+<template id="tmpl-bowlers-data">{{ bowlers_json|safe }}</template>
+<template id="tmpl-allrounders-data">{{ allrounders_json|safe }}</template>
+<template id="tmpl-wicketkeepers-data">{{ wicketkeepers_json|safe }}</template>
 <template id="tmpl-capped-data">{{ capped_players_json|safe }}</template>
 <template id="tmpl-uncapped-data">{{ uncapped_players_json|safe }}</template>
+<template id="tmpl-all-data">{{ players_json|safe }}</template>
 
 <script>
-// Data payloads from templates
-let cappedData = JSON.parse(document.getElementById('tmpl-capped-data').innerHTML);
-let uncappedData = JSON.parse(document.getElementById('tmpl-uncapped-data').innerHTML);
-
-let cappedDesc = true;
-let uncappedDesc = true;
-let activeTeamModalCode = null;
-let activeTeamModalId = null;
-
 // Mode Switcher: Mega Auction vs Mini Auction
 document.getElementById('btn-mode-mega')?.addEventListener('click', () => switchAuctionMode('mega'));
 document.getElementById('btn-mode-mini')?.addEventListener('click', () => switchAuctionMode('mini'));
+
+let activeTeamModalCode = null;
+let activeTeamModalId = null;
+const categorySortDirs = {};
 
 async function switchAuctionMode(mode) {
     try {
@@ -599,24 +632,81 @@ async function switchAuctionMode(mode) {
     }
 }
 
-// Tab Switcher between Capped and Uncapped Player Lists
-function switchCapTab(tab) {
-    const btnCapped = document.getElementById('tab-btn-capped');
-    const btnUncapped = document.getElementById('tab-btn-uncapped');
-    const secCapped = document.getElementById('section-capped-players');
-    const secUncapped = document.getElementById('section-uncapped-players');
+// Tab Switcher between Batters, Bowlers, Allrounders, Wicketkeepers, Capped & Uncapped
+function switchCategoryTab(cat) {
+    const tabs = ['batters', 'bowlers', 'allrounders', 'wicketkeepers', 'capped', 'uncapped', 'all'];
+    tabs.forEach(t => {
+        const btn = document.getElementById(`tab-btn-${t}`);
+        const sec = document.getElementById(`section-${t}-players`);
+        if (btn) {
+            if (t === cat) {
+                btn.classList.add('active-cap-tab');
+            } else {
+                btn.classList.remove('active-cap-tab');
+            }
+        }
+        if (sec) {
+            sec.style.display = (t === cat) ? 'block' : 'none';
+        }
+    });
+}
 
-    if (tab === 'capped') {
-        btnCapped.classList.add('active-cap-tab');
-        btnUncapped.classList.remove('active-cap-tab');
-        secCapped.style.display = 'block';
-        secUncapped.style.display = 'none';
-    } else {
-        btnUncapped.classList.add('active-cap-tab');
-        btnCapped.classList.remove('active-cap-tab');
-        secUncapped.style.display = 'block';
-        secCapped.style.display = 'none';
+// Backward compatibility alias
+function switchCapTab(tab) {
+    switchCategoryTab(tab);
+}
+
+// Client-side high-speed sorting for any category table
+function sortCategorySection(cat, sortKey, ascending = false) {
+    const tbody = document.getElementById(`tbody-${cat}-players`);
+    if (!tbody) return;
+    const rows = Array.from(tbody.querySelectorAll('tr'));
+
+    categorySortDirs[cat] = ascending;
+
+    rows.sort((a, b) => {
+        let valA = parseFloat(a.dataset[sortKey] || 0);
+        let valB = parseFloat(b.dataset[sortKey] || 0);
+        if (isNaN(valA)) valA = 0;
+        if (isNaN(valB)) valB = 0;
+        return ascending ? (valA - valB) : (valB - valA);
+    });
+
+    rows.forEach(r => tbody.appendChild(r));
+
+    const badge = document.getElementById(`badge-${cat}-algo`);
+    if (badge) {
+        const labels = {
+            'price': ascending ? '🏷️ Budget Base Price Tier First' : '💰 Highest Base Price Tier First',
+            'runs': '🏏 Most Career Runs Leaderboard',
+            'wickets': '⚡ Top Wicket Takers Leaderboard',
+            'avg': '🎯 Best Career Batting Average',
+            'sr': '🚀 Highest Scoring Velocity (Strike Rate)',
+            'matches': '📅 Most Career Matches Played'
+        };
+        badge.innerHTML = labels[sortKey] || '⚡ Official Auction Valuation';
     }
+}
+
+function toggleCategoryDirection(cat) {
+    categorySortDirs[cat] = !categorySortDirs[cat];
+    sortCategorySection(cat, 'price', categorySortDirs[cat]);
+}
+
+function sortCappedPlayers(order) {
+    sortCategorySection('capped', 'price', order === 'low');
+}
+
+function toggleCappedDirection() {
+    toggleCategoryDirection('capped');
+}
+
+function sortUncappedPlayers(order) {
+    sortCategorySection('uncapped', 'price', order === 'low');
+}
+
+function toggleUncappedDirection() {
+    toggleCategoryDirection('uncapped');
 }
 
 // 4) INTERACTIVE TEAM INFO & RETENTION MANAGEMENT MODAL
@@ -850,54 +940,6 @@ function renderPlayerTable(tbodyId, playersList) {
         `;
         tbody.appendChild(tr);
     });
-}
-
-// Capped Sorting Handlers
-function sortCappedPlayers(order) {
-    document.querySelectorAll('#section-capped-players .btn-sort-technique').forEach(b => b.classList.remove('active-sort'));
-    const badge = document.getElementById('badge-capped-algo');
-
-    if (order === 'high') {
-        document.getElementById('btn-capped-mergesort')?.classList.add('active-sort');
-        cappedData = mergeSort(cappedData, 'base_price', true);
-        badge.innerHTML = `💰 Top Tier Base Price First (₹2.00 Cr ➜ ₹1.50 Cr ➜ ₹1.00 Cr)`;
-    } else {
-        document.getElementById('btn-capped-quicksort')?.classList.add('active-sort');
-        cappedData = quickSort(cappedData, 'base_price', false);
-        badge.innerHTML = `🏷️ Budget Tier Base Price First (₹75 Lakhs ➜ ₹1.00 Cr ➜ ₹2.00 Cr)`;
-    }
-    renderPlayerTable('tbody-capped-players', cappedData);
-}
-
-function toggleCappedDirection() {
-    cappedDesc = !cappedDesc;
-    const btn = document.getElementById('btn-capped-toggle-dir');
-    if (btn) btn.innerHTML = cappedDesc ? `↕️ High to Low (Desc)` : `↕️ Low to High (Asc)`;
-    sortCappedPlayers(cappedDesc ? 'high' : 'low');
-}
-
-// Uncapped Sorting Handlers
-function sortUncappedPlayers(order) {
-    document.querySelectorAll('#section-uncapped-players .btn-sort-technique').forEach(b => b.classList.remove('active-sort'));
-    const badge = document.getElementById('badge-uncapped-algo');
-
-    if (order === 'high') {
-        document.getElementById('btn-uncapped-mergesort')?.classList.add('active-sort');
-        uncappedData = mergeSort(uncappedData, 'base_price', true);
-        badge.innerHTML = `💰 Highest Uncapped Tier First (₹50 Lakhs ➜ ₹40L ➜ ₹30L ➜ ₹20L)`;
-    } else {
-        document.getElementById('btn-uncapped-quicksort')?.classList.add('active-sort');
-        uncappedData = quickSort(uncappedData, 'base_price', false);
-        badge.innerHTML = `🏷️ Entry Budget Tier First (₹20 Lakhs ➜ ₹30L ➜ ₹40L ➜ ₹50L)`;
-    }
-    renderPlayerTable('tbody-uncapped-players', uncappedData);
-}
-
-function toggleUncappedDirection() {
-    uncappedDesc = !uncappedDesc;
-    const btn = document.getElementById('btn-uncapped-toggle-dir');
-    if (btn) btn.innerHTML = uncappedDesc ? `↕️ High to Low (Desc)` : `↕️ Low to High (Asc)`;
-    sortUncappedPlayers(uncappedDesc ? 'high' : 'low');
 }
 </script>
 {% endblock %}

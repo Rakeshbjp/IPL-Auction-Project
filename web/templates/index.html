@@ -4,23 +4,16 @@
 
 {% block content %}
 <div class="preauction-command-container">
-    <!-- Top Header Bar with Active Mode Status & Arena CTA -->
+    <!-- Top Header Bar -->
     <div class="preauction-header-bar">
         <div class="preauction-title-block">
             <h1>🏛️ TATA IPL AUCTION COMMAND & PRE-AUCTION CENTER</h1>
-            <p>Official BCCI Governing Council Stage • Pre-Auction Regulations • Retentions & RTM Matrix • Sequential Sets Hub</p>
-        </div>
-
-        <div class="header-action-cluster">
-            <span class="header-mode-indicator {% if current_mode == 'mega' %}mode-mega-pill{% else %}mode-mini-pill{% endif %}">
-                {% if current_mode == 'mega' %}⭐ Mega Auction Mode (RTM Active){% else %}⚡ Mini Auction Mode (0 RTM Cards){% endif %}
-            </span>
-            <a href="/auction" class="btn btn-hammer">🔨 Open Live Auction Arena →</a>
+            <p>Official BCCI Governing Council Stage • Player Pools & Valuations • Pre-Auction Franchise Regulations & RTM</p>
         </div>
     </div>
 
     <!-- =========================================================================
-         STAGE 3: OFFICIAL PLAYER POOLS - SEPARATED BY BATTERS, BOWLERS, ALL-ROUNDERS, WICKETKEEPERS, CAPPED & UNCAPPED
+         STAGE 1: OFFICIAL PLAYER POOLS - SEPARATED BY BATTERS, BOWLERS, ALL-ROUNDERS, WICKETKEEPERS, CAPPED & UNCAPPED
          ========================================================================= -->
     {% macro render_pool_table(pool_id, pool_players, default_algo_label) %}
     <div id="section-{{ pool_id }}-players" class="category-player-section" {% if pool_id != 'batters' %}style="display: none;"{% endif %}>
@@ -129,7 +122,7 @@
     <section class="stage-section">
         <div class="stage-section-header">
             <div class="stage-title">
-                <span>👥 STAGE 3: OFFICIAL PLAYER POOLS & SPECIALIZATION SQUADS</span>
+                <span>👥 STAGE 1: OFFICIAL PLAYER POOLS & SPECIALIZATION SQUADS</span>
                 <span class="stage-badge">SEPARATED & RANKED BY OFFICIAL AUCTION VALUATIONS</span>
             </div>
             <div style="display: flex; gap: 0.5rem;">
@@ -227,12 +220,12 @@
 
 
     <!-- =========================================================================
-         STAGE 1: PRE-AUCTION PREPARATIONS, PURSE & SQUAD LIMITS, RETENTIONS & RTM
+         STAGE 2: PRE-AUCTION PREPARATIONS, PURSE & SQUAD LIMITS, RETENTIONS & RTM
          ========================================================================= -->
     <section class="stage-section">
         <div class="stage-section-header">
             <div class="stage-title">
-                <span>📋 STAGE 1: PRE-AUCTION PREPARATIONS & FRANCHISE CONSTRAINTS</span>
+                <span>📋 STAGE 2: PRE-AUCTION PREPARATIONS & FRANCHISE CONSTRAINTS</span>
                 <span class="stage-badge">MANDATORY BCCI REGULATIONS</span>
             </div>
             <a href="/auction" class="btn btn-primary btn-sm">🔨 Enter Live Arena →</a>
@@ -358,12 +351,12 @@
 
 
     <!-- =========================================================================
-         STAGE 4: INITIAL UNSOLD PLAYERS ROUND (ONLY AT LAST OF AUCTION)
+         STAGE 3: INITIAL UNSOLD PLAYERS ROUND (ONLY AT LAST OF AUCTION)
          ========================================================================= -->
     <section class="stage-section">
         <div class="stage-section-header">
             <div class="stage-title">
-                <span>⚡ STAGE 4: INITIAL UNSOLD PLAYERS ROUND (COMES AT LAST ONLY)</span>
+                <span>⚡ STAGE 3: INITIAL UNSOLD PLAYERS ROUND (COMES AT LAST ONLY)</span>
                 <span class="stage-badge">END-OF-AUCTION RE-BIDDING</span>
             </div>
         </div>

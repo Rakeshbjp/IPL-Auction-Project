@@ -218,7 +218,7 @@ body.broadcast-theme {
     top: calc(100% + 8px);
     left: 50%;
     transform: translateX(-50%);
-    width: 380px;
+    width: 330px;
     max-width: 95vw;
     background: #0d1527;
     border: 1px solid rgba(245, 158, 11, 0.4);

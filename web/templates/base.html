@@ -40,7 +40,7 @@
             <nav class="nav-links">
                 <a href="/" class="nav-item {% if request.path == '/' %}active{% endif %}">🏛️ Pre-Auction & Hub</a>
                 
-                <!-- LIVE AUCTION ARENA WITH SUB MENU (MEGA/MINI MODE SWITCHER & STAGE 2 SETS) -->
+                <!-- LIVE AUCTION ARENA WITH SUB MENU (AUCTION FORMAT & OPEN LIVE ARENA) -->
                 <div class="nav-dropdown" id="arena-dropdown-wrapper">
                     <a href="/auction" class="btn-auction-nav {% if request.path == '/auction' %}active-auction{% endif %}" id="nav-btn-auction-arena">
                         🔨 LIVE AUCTION ARENA <span class="dropdown-caret">▾</span>
@@ -66,31 +66,11 @@
                             </button>
                         </div>
 
-                        <!-- Submenu 2: Direct Arena Launch -->
-                        <a href="/auction" class="dropdown-arena-cta">
-                            <span>🔨 Enter Full Live Arena (All Sets)</span>
+                        <!-- Submenu 2: Open Live Auction Arena Button -->
+                        <a href="/auction" class="dropdown-arena-cta" id="btn-open-live-arena">
+                            <span>🔨 Open Live Auction Arena</span>
                             <span class="cta-arrow">→</span>
                         </a>
-
-                        <div class="dropdown-separator"></div>
-
-                        <!-- Submenu 3: Stage 2 Sequential Auction Sets -->
-                        <div class="dropdown-group-header">
-                            <span>🔨 STAGE 2: SEQUENTIAL AUCTION SETS</span>
-                            <span class="text-xs text-muted">Specialization Sets</span>
-                        </div>
-                        <div class="dropdown-sets-grid">
-                            {% for s in global_auction_sets %}
-                            <a href="/auction?set={{ s.code }}" class="dropdown-set-tile" title="Enter {{ s.name }} Auction">
-                                <span class="tile-icon">{{ s.icon }}</span>
-                                <div class="tile-details">
-                                    <span class="tile-name">{{ s.name }}</span>
-                                    <span class="tile-stats">{{ s.available_count }} available / {{ s.total_count }} total</span>
-                                </div>
-                                <span class="tile-code">{{ s.code }}</span>
-                            </a>
-                            {% endfor %}
-                        </div>
                     </div>
                 </div>
 

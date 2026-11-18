@@ -26,19 +26,35 @@ lines.append("ALTER TABLE players ADD COLUMN IF NOT EXISTS former_team VARCHAR(1
 lines.append("ALTER TABLE players ADD COLUMN IF NOT EXISTS is_shortlisted INT DEFAULT 1;")
 lines.append("ALTER TABLE players ADD COLUMN IF NOT EXISTS accelerated INT DEFAULT 0;\n")
 
-# 2. Update teams
-lines.append("-- 2. Update teams with official retentions and RTM cards")
+# 2. Update teams with fresh starting auction purse and 0 retentions
+lines.append("-- 2. Reset teams to 100% fresh auction starting state (₹120 Cr, 0 retentions, 6 RTMs)")
 for t in INITIAL_TEAMS:
-    ret_names = t.get('retained_names', '').replace("'", "''")
     lines.append(f"""UPDATE teams SET 
-    retention_spend = {t.get('retention_spend', 0.0)},
-    retentions_count = {t.get('retentions_count', 0)},
-    rtm_cards = {t.get('rtm_cards', 0)},
-    retained_names = '{ret_names}',
+    total_budget = 1200000000.00,
+    remaining_budget = 1200000000.00,
+    retention_spend = 0.00,
+    retentions_count = 0,
+    rtm_cards = 6,
+    retained_names = '',
     min_squad_size = 18,
     max_squad_size = 25,
     max_overseas = 8
 WHERE UPPER(short_code) = '{t['short_code']}';""")
+
+# 2b. Reset all players to Available
+lines.append("\n-- 2b. Reset all players to Available (0 bought, 0 sold)")
+lines.append("""UPDATE players SET
+    status = 'Available',
+    sold_price = 0.00,
+    team_id = NULL,
+    accelerated = 0;""")
+
+# 2c. Clear all auction bids and team tables
+lines.append("\n-- 2c. Clear all auction bids and bought squad records")
+lines.append("DELETE FROM auction_bids;")
+TEAM_CODES = ['csk', 'mi', 'rcb', 'kkr', 'rr', 'srh', 'gt', 'lsg', 'dc', 'pbks']
+for code in TEAM_CODES:
+    lines.append(f"DELETE FROM {code}_players;")
 
 # 3. Update players
 lines.append("\n-- 3. Update players with sets, capped, overseas and former teams")

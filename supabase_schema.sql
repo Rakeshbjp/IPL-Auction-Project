@@ -396,16 +396,16 @@ WHERE UPPER(t.short_code) = 'PBKS';
 
 -- 6. Seed 10 Real IPL Franchises with Official Purses, Retentions & RTM allocations
 INSERT INTO teams (team_id, team_name, short_code, primary_color, secondary_color, total_budget, remaining_budget, retention_spend, retentions_count, rtm_cards, retained_names, min_squad_size, max_squad_size, max_overseas) VALUES
-(1, 'Chennai Super Kings', 'CSK', '#FDB913', '#0081E8', 1200000000.00, 550000000.00, 650000000.00, 5, 1, 'Ruturaj Gaikwad, Ravindra Jadeja, MS Dhoni, Shivam Dube, Matheesha Pathirana', 18, 25, 8),
-(2, 'Mumbai Indians', 'MI', '#004BA0', '#D1AB3E', 1200000000.00, 450000000.00, 750000000.00, 5, 1, 'Jasprit Bumrah, Suryakumar Yadav, Hardik Pandya, Rohit Sharma, Tilak Varma', 18, 25, 8),
-(3, 'Royal Challengers Bengaluru', 'RCB', '#EC1C24', '#2B2A29', 1200000000.00, 830000000.00, 370000000.00, 3, 3, 'Virat Kohli, Rajat Patidar, Yash Dayal', 18, 25, 8),
-(4, 'Kolkata Knight Riders', 'KKR', '#3A225D', '#F7D54E', 1200000000.00, 510000000.00, 690000000.00, 6, 0, 'Rinku Singh, Andre Russell, Sunil Narine, Varun Chakaravarthy, Harshit Rana, Ramandeep Singh', 18, 25, 8),
-(5, 'Rajasthan Royals', 'RR', '#EA1A85', '#254AA5', 1200000000.00, 410000000.00, 790000000.00, 6, 0, 'Sanju Samson, Yashasvi Jaiswal, Riyan Parag, Dhruv Jurel, Shimron Hetmyer, Sandeep Sharma', 18, 25, 8),
-(6, 'Sunrisers Hyderabad', 'SRH', '#F26522', '#000000', 1200000000.00, 450000000.00, 750000000.00, 5, 1, 'Heinrich Klaasen, Pat Cummins, Abhishek Sharma, Travis Head, Nitish Kumar Reddy', 18, 25, 8),
-(7, 'Gujarat Titans', 'GT', '#1C1C1C', '#0B4973', 1200000000.00, 690000000.00, 510000000.00, 5, 1, 'Rashid Khan, Shubman Gill, Sai Sudharsan, Rahul Tewatia, Shahrukh Khan', 18, 25, 8),
-(8, 'Lucknow Super Giants', 'LSG', '#A72056', '#0055A5', 1200000000.00, 690000000.00, 510000000.00, 5, 1, 'Nicholas Pooran, Ravi Bishnoi, Mayank Yadav, Mohsin Khan, Ayush Badoni', 18, 25, 8),
-(9, 'Delhi Capitals', 'DC', '#004C93', '#E41B17', 1200000000.00, 730000000.00, 470000000.00, 4, 2, 'Axar Patel, Kuldeep Yadav, Tristan Stubbs, Abishek Porel', 18, 25, 8),
-(10, 'Punjab Kings', 'PBKS', '#DD1F2D', '#C3A25D', 1200000000.00, 1105000000.00, 95000000.00, 2, 4, 'Shashank Singh, Prabhsimran Singh', 18, 25, 8);
+(1, 'Chennai Super Kings', 'CSK', '#FDB913', '#0081E8', 1200000000.00, 1200000000.00, 0.00, 0, 6, '', 18, 25, 8),
+(2, 'Mumbai Indians', 'MI', '#004BA0', '#D1AB3E', 1200000000.00, 1200000000.00, 0.00, 0, 6, '', 18, 25, 8),
+(3, 'Royal Challengers Bengaluru', 'RCB', '#EC1C24', '#2B2A29', 1200000000.00, 1200000000.00, 0.00, 0, 6, '', 18, 25, 8),
+(4, 'Kolkata Knight Riders', 'KKR', '#3A225D', '#F7D54E', 1200000000.00, 1200000000.00, 0.00, 0, 6, '', 18, 25, 8),
+(5, 'Rajasthan Royals', 'RR', '#EA1A85', '#254AA5', 1200000000.00, 1200000000.00, 0.00, 0, 6, '', 18, 25, 8),
+(6, 'Sunrisers Hyderabad', 'SRH', '#F26522', '#000000', 1200000000.00, 1200000000.00, 0.00, 0, 6, '', 18, 25, 8),
+(7, 'Gujarat Titans', 'GT', '#1C1C1C', '#0B4973', 1200000000.00, 1200000000.00, 0.00, 0, 6, '', 18, 25, 8),
+(8, 'Lucknow Super Giants', 'LSG', '#A72056', '#0055A5', 1200000000.00, 1200000000.00, 0.00, 0, 6, '', 18, 25, 8),
+(9, 'Delhi Capitals', 'DC', '#004C93', '#E41B17', 1200000000.00, 1200000000.00, 0.00, 0, 6, '', 18, 25, 8),
+(10, 'Punjab Kings', 'PBKS', '#DD1F2D', '#C3A25D', 1200000000.00, 1200000000.00, 0.00, 0, 6, '', 18, 25, 8);
 
 -- 7. Seed Real IPL Players organized into Sequential Sets with Former Team RTM mapping
 INSERT INTO players (player_id, name, role, country, base_price, sold_price, status, set_name, set_code, is_capped, is_overseas, former_team, is_shortlisted, accelerated, team_id) VALUES

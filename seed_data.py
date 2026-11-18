@@ -18,7 +18,7 @@ Features:
 
 from typing import List, Dict, Any
 
-# 10 Official IPL Franchises with exact team colors, ₹120 Cr Purse, Retentions, and RTM allocations
+# 10 Official IPL Franchises with exact team colors, ₹120 Cr Full Purse, Ready for Fresh Auction
 INITIAL_TEAMS: List[Dict[str, Any]] = [
     {
         "team_name": "Chennai Super Kings",
@@ -26,11 +26,11 @@ INITIAL_TEAMS: List[Dict[str, Any]] = [
         "primary_color": "#FDB913",
         "secondary_color": "#0081E8",
         "total_budget": 1200000000.0,
-        "remaining_budget": 550000000.0,  # ₹55 Cr after ₹65 Cr retentions
-        "retention_spend": 650000000.0,
-        "retentions_count": 5,
-        "rtm_cards": 1,  # 6 - 5 = 1 in Mega Auction
-        "retained_names": "Ruturaj Gaikwad, Ravindra Jadeja, MS Dhoni, Shivam Dube, Matheesha Pathirana",
+        "remaining_budget": 1200000000.0,
+        "retention_spend": 0.0,
+        "retentions_count": 0,
+        "rtm_cards": 6,
+        "retained_names": "",
         "min_squad_size": 18,
         "max_squad_size": 25,
         "max_overseas": 8,
@@ -41,11 +41,11 @@ INITIAL_TEAMS: List[Dict[str, Any]] = [
         "primary_color": "#004BA0",
         "secondary_color": "#D1AB3E",
         "total_budget": 1200000000.0,
-        "remaining_budget": 450000000.0,  # ₹45 Cr after ₹75 Cr retentions
-        "retention_spend": 750000000.0,
-        "retentions_count": 5,
-        "rtm_cards": 1,  # 6 - 5 = 1
-        "retained_names": "Jasprit Bumrah, Suryakumar Yadav, Hardik Pandya, Rohit Sharma, Tilak Varma",
+        "remaining_budget": 1200000000.0,
+        "retention_spend": 0.0,
+        "retentions_count": 0,
+        "rtm_cards": 6,
+        "retained_names": "",
         "min_squad_size": 18,
         "max_squad_size": 25,
         "max_overseas": 8,
@@ -56,11 +56,11 @@ INITIAL_TEAMS: List[Dict[str, Any]] = [
         "primary_color": "#EC1C24",
         "secondary_color": "#2B2A29",
         "total_budget": 1200000000.0,
-        "remaining_budget": 830000000.0,  # ₹83 Cr after ₹37 Cr retentions
-        "retention_spend": 370000000.0,
-        "retentions_count": 3,
-        "rtm_cards": 3,  # 6 - 3 = 3
-        "retained_names": "Virat Kohli, Rajat Patidar, Yash Dayal",
+        "remaining_budget": 1200000000.0,
+        "retention_spend": 0.0,
+        "retentions_count": 0,
+        "rtm_cards": 6,
+        "retained_names": "",
         "min_squad_size": 18,
         "max_squad_size": 25,
         "max_overseas": 8,
@@ -71,11 +71,11 @@ INITIAL_TEAMS: List[Dict[str, Any]] = [
         "primary_color": "#3A225D",
         "secondary_color": "#F7D54E",
         "total_budget": 1200000000.0,
-        "remaining_budget": 510000000.0,  # ₹51 Cr after ₹69 Cr retentions
-        "retention_spend": 690000000.0,
-        "retentions_count": 6,
-        "rtm_cards": 0,  # 6 - 6 = 0 (max 6 retained -> 0 RTM)
-        "retained_names": "Rinku Singh, Andre Russell, Sunil Narine, Varun Chakaravarthy, Harshit Rana, Ramandeep Singh",
+        "remaining_budget": 1200000000.0,
+        "retention_spend": 0.0,
+        "retentions_count": 0,
+        "rtm_cards": 6,
+        "retained_names": "",
         "min_squad_size": 18,
         "max_squad_size": 25,
         "max_overseas": 8,
@@ -86,11 +86,11 @@ INITIAL_TEAMS: List[Dict[str, Any]] = [
         "primary_color": "#EA1A85",
         "secondary_color": "#254AA5",
         "total_budget": 1200000000.0,
-        "remaining_budget": 410000000.0,  # ₹41 Cr after ₹79 Cr retentions
-        "retention_spend": 790000000.0,
-        "retentions_count": 6,
-        "rtm_cards": 0,  # 6 - 6 = 0
-        "retained_names": "Sanju Samson, Yashasvi Jaiswal, Riyan Parag, Dhruv Jurel, Shimron Hetmyer, Sandeep Sharma",
+        "remaining_budget": 1200000000.0,
+        "retention_spend": 0.0,
+        "retentions_count": 0,
+        "rtm_cards": 6,
+        "retained_names": "",
         "min_squad_size": 18,
         "max_squad_size": 25,
         "max_overseas": 8,
@@ -101,11 +101,11 @@ INITIAL_TEAMS: List[Dict[str, Any]] = [
         "primary_color": "#F26522",
         "secondary_color": "#000000",
         "total_budget": 1200000000.0,
-        "remaining_budget": 450000000.0,  # ₹45 Cr after ₹75 Cr retentions
-        "retention_spend": 750000000.0,
-        "retentions_count": 5,
-        "rtm_cards": 1,  # 6 - 5 = 1
-        "retained_names": "Heinrich Klaasen, Pat Cummins, Abhishek Sharma, Travis Head, Nitish Kumar Reddy",
+        "remaining_budget": 1200000000.0,
+        "retention_spend": 0.0,
+        "retentions_count": 0,
+        "rtm_cards": 6,
+        "retained_names": "",
         "min_squad_size": 18,
         "max_squad_size": 25,
         "max_overseas": 8,
@@ -116,11 +116,11 @@ INITIAL_TEAMS: List[Dict[str, Any]] = [
         "primary_color": "#1C1C1C",
         "secondary_color": "#0B4973",
         "total_budget": 1200000000.0,
-        "remaining_budget": 690000000.0,  # ₹69 Cr after ₹51 Cr retentions
-        "retention_spend": 510000000.0,
-        "retentions_count": 5,
-        "rtm_cards": 1,  # 6 - 5 = 1
-        "retained_names": "Rashid Khan, Shubman Gill, Sai Sudharsan, Rahul Tewatia, Shahrukh Khan",
+        "remaining_budget": 1200000000.0,
+        "retention_spend": 0.0,
+        "retentions_count": 0,
+        "rtm_cards": 6,
+        "retained_names": "",
         "min_squad_size": 18,
         "max_squad_size": 25,
         "max_overseas": 8,
@@ -131,11 +131,11 @@ INITIAL_TEAMS: List[Dict[str, Any]] = [
         "primary_color": "#A72056",
         "secondary_color": "#0055A5",
         "total_budget": 1200000000.0,
-        "remaining_budget": 690000000.0,  # ₹69 Cr after ₹51 Cr retentions
-        "retention_spend": 510000000.0,
-        "retentions_count": 5,
-        "rtm_cards": 1,  # 6 - 5 = 1
-        "retained_names": "Nicholas Pooran, Ravi Bishnoi, Mayank Yadav, Mohsin Khan, Ayush Badoni",
+        "remaining_budget": 1200000000.0,
+        "retention_spend": 0.0,
+        "retentions_count": 0,
+        "rtm_cards": 6,
+        "retained_names": "",
         "min_squad_size": 18,
         "max_squad_size": 25,
         "max_overseas": 8,
@@ -146,11 +146,11 @@ INITIAL_TEAMS: List[Dict[str, Any]] = [
         "primary_color": "#004C93",
         "secondary_color": "#E41B17",
         "total_budget": 1200000000.0,
-        "remaining_budget": 730000000.0,  # ₹73 Cr after ₹47 Cr retentions
-        "retention_spend": 470000000.0,
-        "retentions_count": 4,
-        "rtm_cards": 2,  # 6 - 4 = 2
-        "retained_names": "Axar Patel, Kuldeep Yadav, Tristan Stubbs, Abishek Porel",
+        "remaining_budget": 1200000000.0,
+        "retention_spend": 0.0,
+        "retentions_count": 0,
+        "rtm_cards": 6,
+        "retained_names": "",
         "min_squad_size": 18,
         "max_squad_size": 25,
         "max_overseas": 8,
@@ -161,11 +161,11 @@ INITIAL_TEAMS: List[Dict[str, Any]] = [
         "primary_color": "#DD1F2D",
         "secondary_color": "#C3A25D",
         "total_budget": 1200000000.0,
-        "remaining_budget": 1105000000.0,  # ₹110.5 Cr after ₹9.5 Cr retentions
-        "retention_spend": 95000000.0,
-        "retentions_count": 2,
-        "rtm_cards": 4,  # 6 - 2 = 4
-        "retained_names": "Shashank Singh, Prabhsimran Singh",
+        "remaining_budget": 1200000000.0,
+        "retention_spend": 0.0,
+        "retentions_count": 0,
+        "rtm_cards": 6,
+        "retained_names": "",
         "min_squad_size": 18,
         "max_squad_size": 25,
         "max_overseas": 8,

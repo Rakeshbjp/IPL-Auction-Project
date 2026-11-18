@@ -67,7 +67,12 @@ init_db()
 
 @app.context_processor
 def utility_processor():
-    return dict(format_currency=format_currency)
+    from auction.auction_engine import get_auction_mode, get_auction_sets
+    return dict(
+        format_currency=format_currency,
+        current_mode=get_auction_mode(),
+        global_auction_sets=get_auction_sets(),
+    )
 
 
 @app.route("/")

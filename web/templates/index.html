@@ -4,207 +4,20 @@
 
 {% block content %}
 <div class="preauction-command-container">
-    <!-- Top Header Bar with Two Prominent Mode Buttons: Mega Auction vs Mini Auction -->
+    <!-- Top Header Bar with Active Mode Status & Arena CTA -->
     <div class="preauction-header-bar">
         <div class="preauction-title-block">
             <h1>🏛️ TATA IPL AUCTION COMMAND & PRE-AUCTION CENTER</h1>
             <p>Official BCCI Governing Council Stage • Pre-Auction Regulations • Retentions & RTM Matrix • Sequential Sets Hub</p>
         </div>
 
-        <!-- 1) TWO PROMINENT BUTTONS: MEGA AUCTION & MINI AUCTION -->
-        <div class="mode-switcher-container">
-            <button type="button" 
-                    id="btn-mode-mega" 
-                    class="mode-toggle-btn {% if current_mode == 'mega' %}active-mode{% endif %}"
-                    data-mode="mega">
-                ⭐ Mega Auction (RTM Active)
-            </button>
-            <button type="button" 
-                    id="btn-mode-mini" 
-                    class="mode-toggle-btn {% if current_mode == 'mini' %}active-mode{% endif %}"
-                    data-mode="mini">
-                ⚡ Mini Auction (0 RTM Cards)
-            </button>
+        <div class="header-action-cluster">
+            <span class="header-mode-indicator {% if current_mode == 'mega' %}mode-mega-pill{% else %}mode-mini-pill{% endif %}">
+                {% if current_mode == 'mega' %}⭐ Mega Auction Mode (RTM Active){% else %}⚡ Mini Auction Mode (0 RTM Cards){% endif %}
+            </span>
+            <a href="/auction" class="btn btn-hammer">🔨 Open Live Auction Arena →</a>
         </div>
     </div>
-
-    <!-- =========================================================================
-         STAGE 1: PRE-AUCTION PREPARATIONS, PURSE & SQUAD LIMITS, RETENTIONS & RTM
-         ========================================================================= -->
-    <section class="stage-section">
-        <div class="stage-section-header">
-            <div class="stage-title">
-                <span>📋 STAGE 1: PRE-AUCTION PREPARATIONS & FRANCHISE CONSTRAINTS</span>
-                <span class="stage-badge">MANDATORY BCCI REGULATIONS</span>
-            </div>
-            <a href="/auction" class="btn btn-primary btn-sm">🔨 Enter Live Arena →</a>
-        </div>
-
-        <!-- 4 Key Pre-Auction Constraint Cards -->
-        <div class="preauction-kpi-grid">
-            <div class="preauction-kpi-card">
-                <div class="kpi-card-icon">💰</div>
-                <div class="kpi-card-info">
-                    <span class="kpi-card-label">Fixed Franchise Budget</span>
-                    <strong class="kpi-card-value">₹120.00 CR</strong>
-                    <span class="kpi-card-sub">League Total: {{ format_currency(total_purse_league) }}</span>
-                </div>
-            </div>
-
-            <div class="preauction-kpi-card">
-                <div class="kpi-card-icon">👥</div>
-                <div class="kpi-card-info">
-                    <span class="kpi-card-label">Squad Size Bounds</span>
-                    <strong class="kpi-card-value">18 – 25 PLAYERS</strong>
-                    <span class="kpi-card-sub">Min 18 required • Max 25 allowed</span>
-                </div>
-            </div>
-
-            <div class="preauction-kpi-card">
-                <div class="kpi-card-icon">✈️</div>
-                <div class="kpi-card-info">
-                    <span class="kpi-card-label">Overseas Player Cap</span>
-                    <strong class="kpi-card-value">MAX 8 OVERSEAS</strong>
-                    <span class="kpi-card-sub">Paddle disabled if quota filled</span>
-                </div>
-            </div>
-
-            <div class="preauction-kpi-card">
-                <div class="kpi-card-icon">🃏</div>
-                <div class="kpi-card-info">
-                    <span class="kpi-card-label">Right-To-Match (RTM)</span>
-                    <strong class="kpi-card-value" id="kpi-rtm-status">
-                        {% if current_mode == 'mega' %}6 - RETENTIONS{% else %}0 (DISABLED){% endif %}
-                    </strong>
-                    <span class="kpi-card-sub" id="kpi-rtm-sub">
-                        {% if current_mode == 'mega' %}{{ total_rtm_cards_available }} Cards Active in League{% else %}RTM card cannot be used in Mini Auction{% endif %}
-                    </span>
-                </div>
-            </div>
-        </div>
-
-        <!-- 10 Franchise Retentions, Purse & RTM Matrix Table (Click on any Team Name for Full Info & Retain Options) -->
-        <div class="matrix-table-card">
-            <div class="table-responsive">
-                <table class="data-table">
-                    <thead>
-                        <tr>
-                            <th class="text-center">Emblem</th>
-                            <th>Franchise Name (Click for Info & Retentions)</th>
-                            <th class="text-center">Retentions (0-6)</th>
-                            <th>Retained Star Players</th>
-                            <th class="text-center">RTM Cards Available</th>
-                            <th class="text-right">Retention Spend</th>
-                            <th class="text-right">Auction Purse Left</th>
-                            <th class="text-center">Squad (Min 18 / Max 25)</th>
-                            <th class="text-center">Overseas (Max 8)</th>
-                            <th class="text-center">Action</th>
-                        </tr>
-                    </thead>
-                    <tbody id="rtm-matrix-body">
-                        {% for t in teams %}
-                        <tr>
-                            <td class="text-center" onclick="openTeamDossier('{{ t.short_code }}')" style="cursor: pointer;" title="Click to view full franchise dossier & manage retentions">
-                                <span class="team-badge-cell team-bg-{{ t.short_code|lower }}">
-                                    {{ t.short_code }}
-                                </span>
-                            </td>
-                            <td onclick="openTeamDossier('{{ t.short_code }}')" style="cursor: pointer;" title="Click to view full franchise dossier & manage retentions">
-                                <strong class="color-gold" style="text-decoration: underline;">{{ t.team_name }}</strong>
-                                <span class="text-xs text-muted block">🔍 Click to View Info, Squad & Retain</span>
-                            </td>
-                            <td class="text-center font-bold">
-                                {{ t.retentions_count }} / 6
-                            </td>
-                            <td>
-                                <span class="text-muted text-sm">{{ t.retained_names or 'None (Enters with 6 RTMs)' }}</span>
-                            </td>
-                            <td class="text-center">
-                                {% if current_mode == 'mega' %}
-                                    {% if t.rtm_cards > 0 %}
-                                        <span class="rtm-tag-pill rtm-active">🃏 {{ t.rtm_cards }} RTM</span>
-                                    {% else %}
-                                        <span class="rtm-tag-pill rtm-zero">0 RTM (Max Retained)</span>
-                                    {% endif %}
-                                {% else %}
-                                    <span class="rtm-tag-pill rtm-disabled">0 (Mini Auction)</span>
-                                {% endif %}
-                            </td>
-                            <td class="text-right color-red font-bold">
-                                {{ t.retention_spend_fmt }}
-                            </td>
-                            <td class="text-right color-green font-bold">
-                                {{ t.remaining_budget_fmt }}
-                            </td>
-                            <td class="text-center">
-                                <span class="font-bold {% if t.total_squad_size >= 18 %}color-green{% else %}color-gold{% endif %}">
-                                    {{ t.total_squad_size }} / 25
-                                </span>
-                                <span class="text-xs text-muted block">(min 18)</span>
-                            </td>
-                            <td class="text-center font-bold {% if t.overseas_count >= 8 %}color-red{% else %}color-blue{% endif %}">
-                                {{ t.overseas_count }} / 8
-                            </td>
-                            <td class="text-center">
-                                <button type="button" class="btn btn-primary btn-xs" onclick="openTeamDossier('{{ t.short_code }}')">
-                                    📋 Team Info & Retain
-                                </button>
-                            </td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    </section>
-
-    <!-- =========================================================================
-         STAGE 2: THE SEQUENTIAL AUCTION SETS HUB
-         ========================================================================= -->
-    <section class="stage-section">
-        <div class="stage-section-header">
-            <div class="stage-title">
-                <span>🔨 STAGE 2: SEQUENTIAL AUCTION SETS (SPECIALIZATION CATEGORIES)</span>
-                <span class="stage-badge">OFFICIAL PRESENTATION ORDER</span>
-            </div>
-            <span class="text-sm text-muted">Order within sets decided by random draw • Auctioneer calls players at base price</span>
-        </div>
-
-        <div class="sets-hub-grid">
-            {% for s in auction_sets %}
-            <div class="set-hub-card">
-                <div class="set-card-top">
-                    <div class="set-card-icon">{{ s.icon }}</div>
-                    <div class="set-card-title-wrap">
-                        <h3>{{ s.name }}</h3>
-                        <span class="set-code-badge">{{ s.code }}</span>
-                    </div>
-                </div>
-
-                <div class="set-card-metrics">
-                    <div class="set-metric-item">
-                        <span>Total</span>
-                        <strong>{{ s.total_count }}</strong>
-                    </div>
-                    <div class="set-metric-item">
-                        <span>Available</span>
-                        <strong class="color-green">{{ s.available_count }}</strong>
-                    </div>
-                    <div class="set-metric-item">
-                        <span>Sold</span>
-                        <strong class="color-gold">{{ s.sold_count }}</strong>
-                    </div>
-                </div>
-
-                <div class="set-card-action">
-                    <a href="/auction?set={{ s.code }}" class="btn btn-primary btn-sm btn-block">
-                        🔨 Enter {{ s.code }} Auction →
-                    </a>
-                </div>
-            </div>
-            {% endfor %}
-        </div>
-    </section>
 
     <!-- =========================================================================
          STAGE 3: OFFICIAL PLAYER POOLS - SEPARATED BY BATTERS, BOWLERS, ALL-ROUNDERS, WICKETKEEPERS, CAPPED & UNCAPPED
@@ -411,6 +224,138 @@
         {{ render_pool_table('uncapped', uncapped_players, '🌟 Emerging Uncapped Talents (₹50L - ₹20L)') }}
         {{ render_pool_table('all', players, '👥 Complete Registered Player Pool') }}
     </section>
+
+
+    <!-- =========================================================================
+         STAGE 1: PRE-AUCTION PREPARATIONS, PURSE & SQUAD LIMITS, RETENTIONS & RTM
+         ========================================================================= -->
+    <section class="stage-section">
+        <div class="stage-section-header">
+            <div class="stage-title">
+                <span>📋 STAGE 1: PRE-AUCTION PREPARATIONS & FRANCHISE CONSTRAINTS</span>
+                <span class="stage-badge">MANDATORY BCCI REGULATIONS</span>
+            </div>
+            <a href="/auction" class="btn btn-primary btn-sm">🔨 Enter Live Arena →</a>
+        </div>
+
+        <!-- 4 Key Pre-Auction Constraint Cards -->
+        <div class="preauction-kpi-grid">
+            <div class="preauction-kpi-card">
+                <div class="kpi-card-icon">💰</div>
+                <div class="kpi-card-info">
+                    <span class="kpi-card-label">Fixed Franchise Budget</span>
+                    <strong class="kpi-card-value">₹120.00 CR</strong>
+                    <span class="kpi-card-sub">League Total: {{ format_currency(total_purse_league) }}</span>
+                </div>
+            </div>
+
+            <div class="preauction-kpi-card">
+                <div class="kpi-card-icon">👥</div>
+                <div class="kpi-card-info">
+                    <span class="kpi-card-label">Squad Size Bounds</span>
+                    <strong class="kpi-card-value">18 – 25 PLAYERS</strong>
+                    <span class="kpi-card-sub">Min 18 required • Max 25 allowed</span>
+                </div>
+            </div>
+
+            <div class="preauction-kpi-card">
+                <div class="kpi-card-icon">✈️</div>
+                <div class="kpi-card-info">
+                    <span class="kpi-card-label">Overseas Player Cap</span>
+                    <strong class="kpi-card-value">MAX 8 OVERSEAS</strong>
+                    <span class="kpi-card-sub">Paddle disabled if quota filled</span>
+                </div>
+            </div>
+
+            <div class="preauction-kpi-card">
+                <div class="kpi-card-icon">🃏</div>
+                <div class="kpi-card-info">
+                    <span class="kpi-card-label">Right-To-Match (RTM)</span>
+                    <strong class="kpi-card-value" id="kpi-rtm-status">
+                        {% if current_mode == 'mega' %}6 - RETENTIONS{% else %}0 (DISABLED){% endif %}
+                    </strong>
+                    <span class="kpi-card-sub" id="kpi-rtm-sub">
+                        {% if current_mode == 'mega' %}{{ total_rtm_cards_available }} Cards Active in League{% else %}RTM card cannot be used in Mini Auction{% endif %}
+                    </span>
+                </div>
+            </div>
+        </div>
+
+        <!-- 10 Franchise Retentions, Purse & RTM Matrix Table (Click on any Team Name for Full Info & Retain Options) -->
+        <div class="matrix-table-card">
+            <div class="table-responsive">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th class="text-center">Emblem</th>
+                            <th>Franchise Name (Click for Info & Retentions)</th>
+                            <th class="text-center">Retentions (0-6)</th>
+                            <th>Retained Star Players</th>
+                            <th class="text-center">RTM Cards Available</th>
+                            <th class="text-right">Retention Spend</th>
+                            <th class="text-right">Auction Purse Left</th>
+                            <th class="text-center">Squad (Min 18 / Max 25)</th>
+                            <th class="text-center">Overseas (Max 8)</th>
+                            <th class="text-center">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="rtm-matrix-body">
+                        {% for t in teams %}
+                        <tr>
+                            <td class="text-center" onclick="openTeamDossier('{{ t.short_code }}')" style="cursor: pointer;" title="Click to view full franchise dossier & manage retentions">
+                                <span class="team-badge-cell team-bg-{{ t.short_code|lower }}">
+                                    {{ t.short_code }}
+                                </span>
+                            </td>
+                            <td onclick="openTeamDossier('{{ t.short_code }}')" style="cursor: pointer;" title="Click to view full franchise dossier & manage retentions">
+                                <strong class="color-gold" style="text-decoration: underline;">{{ t.team_name }}</strong>
+                                <span class="text-xs text-muted block">🔍 Click to View Info, Squad & Retain</span>
+                            </td>
+                            <td class="text-center font-bold">
+                                {{ t.retentions_count }} / 6
+                            </td>
+                            <td>
+                                <span class="text-muted text-sm">{{ t.retained_names or 'None (Enters with 6 RTMs)' }}</span>
+                            </td>
+                            <td class="text-center">
+                                {% if current_mode == 'mega' %}
+                                    {% if t.rtm_cards > 0 %}
+                                        <span class="rtm-tag-pill rtm-active">🃏 {{ t.rtm_cards }} RTM</span>
+                                    {% else %}
+                                        <span class="rtm-tag-pill rtm-zero">0 RTM (Max Retained)</span>
+                                    {% endif %}
+                                {% else %}
+                                    <span class="rtm-tag-pill rtm-disabled">0 (Mini Auction)</span>
+                                {% endif %}
+                            </td>
+                            <td class="text-right color-red font-bold">
+                                {{ t.retention_spend_fmt }}
+                            </td>
+                            <td class="text-right color-green font-bold">
+                                {{ t.remaining_budget_fmt }}
+                            </td>
+                            <td class="text-center">
+                                <span class="font-bold {% if t.total_squad_size >= 18 %}color-green{% else %}color-gold{% endif %}">
+                                    {{ t.total_squad_size }} / 25
+                                </span>
+                                <span class="text-xs text-muted block">(min 18)</span>
+                            </td>
+                            <td class="text-center font-bold {% if t.overseas_count >= 8 %}color-red{% else %}color-blue{% endif %}">
+                                {{ t.overseas_count }} / 8
+                            </td>
+                            <td class="text-center">
+                                <button type="button" class="btn btn-primary btn-xs" onclick="openTeamDossier('{{ t.short_code }}')">
+                                    📋 Team Info & Retain
+                                </button>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </section>
+
 
     <!-- =========================================================================
          STAGE 4: INITIAL UNSOLD PLAYERS ROUND (ONLY AT LAST OF AUCTION)

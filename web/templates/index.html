@@ -17,20 +17,60 @@
          ========================================================================= -->
     {% macro render_pool_table(pool_id, pool_players, default_algo_label) %}
     <div id="section-{{ pool_id }}-players" class="category-player-section" {% if pool_id != 'batters' %}style="display: none;"{% endif %}>
+        {% if pool_id.startswith('capped') %}
+        <div class="sub-filter-pills-bar">
+            <span class="sub-filter-label">🧢 Capped Roles:</span>
+            <button type="button" class="sub-pill-btn {% if pool_id == 'capped' %}active{% endif %}" onclick="switchCategoryTab('capped')">
+                🧢 All Capped ({{ category_counts.capped }})
+            </button>
+            <button type="button" class="sub-pill-btn {% if pool_id == 'capped_batters' %}active{% endif %}" onclick="switchCategoryTab('capped_batters')">
+                🏏 Capped Batters ({{ category_counts.capped_batters }}) [Runs ↓]
+            </button>
+            <button type="button" class="sub-pill-btn {% if pool_id == 'capped_bowlers' %}active{% endif %}" onclick="switchCategoryTab('capped_bowlers')">
+                ⚡ Capped Bowlers ({{ category_counts.capped_bowlers }}) [Wickets ↓]
+            </button>
+            <button type="button" class="sub-pill-btn {% if pool_id == 'capped_allrounders' %}active{% endif %}" onclick="switchCategoryTab('capped_allrounders')">
+                🔥 Capped All-rounders ({{ category_counts.capped_allrounders }})
+            </button>
+            <button type="button" class="sub-pill-btn {% if pool_id == 'capped_wicketkeepers' %}active{% endif %}" onclick="switchCategoryTab('capped_wicketkeepers')">
+                🧤 Capped WKs ({{ category_counts.capped_wicketkeepers }})
+            </button>
+        </div>
+        {% elif pool_id.startswith('uncapped') %}
+        <div class="sub-filter-pills-bar">
+            <span class="sub-filter-label">🌟 Uncapped Roles:</span>
+            <button type="button" class="sub-pill-btn {% if pool_id == 'uncapped' %}active{% endif %}" onclick="switchCategoryTab('uncapped')">
+                🌟 All Uncapped ({{ category_counts.uncapped }})
+            </button>
+            <button type="button" class="sub-pill-btn {% if pool_id == 'uncapped_batters' %}active{% endif %}" onclick="switchCategoryTab('uncapped_batters')">
+                🏏 Uncapped Batters ({{ category_counts.uncapped_batters }}) [Runs ↓]
+            </button>
+            <button type="button" class="sub-pill-btn {% if pool_id == 'uncapped_bowlers' %}active{% endif %}" onclick="switchCategoryTab('uncapped_bowlers')">
+                ⚡ Uncapped Bowlers ({{ category_counts.uncapped_bowlers }}) [Wickets ↓]
+            </button>
+            <button type="button" class="sub-pill-btn {% if pool_id == 'uncapped_allrounders' %}active{% endif %}" onclick="switchCategoryTab('uncapped_allrounders')">
+                🔥 Uncapped All-rounders ({{ category_counts.uncapped_allrounders }})
+            </button>
+            <button type="button" class="sub-pill-btn {% if pool_id == 'uncapped_wicketkeepers' %}active{% endif %}" onclick="switchCategoryTab('uncapped_wicketkeepers')">
+                🧤 Uncapped WKs ({{ category_counts.uncapped_wicketkeepers }})
+            </button>
+        </div>
+        {% endif %}
+
         <div class="sort-technique-bar">
             <div class="sort-technique-buttons">
-                <span class="sort-label">Auction Rankings:</span>
-                <button type="button" class="btn-sort-technique" onclick="sortCategorySection('{{ pool_id }}', 'price', false)">
-                    💰 Highest Base Price (Top Tier)
-                </button>
-                <button type="button" class="btn-sort-technique" onclick="sortCategorySection('{{ pool_id }}', 'price', true)">
-                    🏷️ Lowest Base Price (Budget Tier)
-                </button>
+                <span class="sort-label">Rankings:</span>
                 <button type="button" class="btn-sort-technique" onclick="sortCategorySection('{{ pool_id }}', 'runs', false)">
                     🏏 Most Career Runs (Orange Cap)
                 </button>
                 <button type="button" class="btn-sort-technique" onclick="sortCategorySection('{{ pool_id }}', 'wickets', false)">
                     ⚡ Top Wickets (Purple Cap)
+                </button>
+                <button type="button" class="btn-sort-technique" onclick="sortCategorySection('{{ pool_id }}', 'price', false)">
+                    💰 Highest Base Price (Top Tier)
+                </button>
+                <button type="button" class="btn-sort-technique" onclick="sortCategorySection('{{ pool_id }}', 'price', true)">
+                    🏷️ Lowest Base Price (Budget Tier)
                 </button>
                 <button type="button" class="btn-sort-technique" onclick="sortCategorySection('{{ pool_id }}', 'avg', false)">
                     🎯 Best Batting Average
@@ -133,7 +173,7 @@
 
         <!-- 6 Interactive Category Stat Cards -->
         <div class="preauction-kpi-grid" style="grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); margin-bottom: 1.5rem;">
-            <div class="preauction-kpi-card" onclick="switchCategoryTab('batters')" style="cursor: pointer; transition: transform 0.2s;" title="Click to view Batters">
+            <div class="preauction-kpi-card" onclick="switchCategoryTab('batters')" style="cursor: pointer; transition: transform 0.2s;" title="Click to view Batters (Highest Runs First)">
                 <div class="kpi-card-icon">🏏</div>
                 <div class="kpi-card-info">
                     <span class="kpi-card-label">Batters Pool</span>
@@ -141,12 +181,12 @@
                     <span class="kpi-card-sub">Top: Virat Kohli (8,661 runs)</span>
                 </div>
             </div>
-            <div class="preauction-kpi-card" onclick="switchCategoryTab('bowlers')" style="cursor: pointer; transition: transform 0.2s;" title="Click to view Bowlers">
+            <div class="preauction-kpi-card" onclick="switchCategoryTab('bowlers')" style="cursor: pointer; transition: transform 0.2s;" title="Click to view Bowlers (Top Wickets First)">
                 <div class="kpi-card-icon">⚡</div>
                 <div class="kpi-card-info">
                     <span class="kpi-card-label">Bowlers Pool</span>
                     <strong class="kpi-card-value">{{ category_counts.bowlers }} Players</strong>
-                    <span class="kpi-card-sub">Top: Chahal (221) / Bumrah (183)</span>
+                    <span class="kpi-card-sub">Top: Chahal (221 wkts)</span>
                 </div>
             </div>
             <div class="preauction-kpi-card" onclick="switchCategoryTab('allrounders')" style="cursor: pointer; transition: transform 0.2s;" title="Click to view All-rounders">
@@ -154,7 +194,7 @@
                 <div class="kpi-card-info">
                     <span class="kpi-card-label">All-rounders</span>
                     <strong class="kpi-card-value">{{ category_counts.allrounders }} Players</strong>
-                    <span class="kpi-card-sub">Premier: Hardik / Jadeja / Russell</span>
+                    <span class="kpi-card-sub">Top: Jadeja (3,260r, 170w)</span>
                 </div>
             </div>
             <div class="preauction-kpi-card" onclick="switchCategoryTab('wicketkeepers')" style="cursor: pointer; transition: transform 0.2s;" title="Click to view Wicketkeepers">
@@ -162,7 +202,7 @@
                 <div class="kpi-card-info">
                     <span class="kpi-card-label">Wicketkeepers</span>
                     <strong class="kpi-card-value">{{ category_counts.wicketkeepers }} Players</strong>
-                    <span class="kpi-card-sub">Glovemen: Dhoni / Pant / Samson</span>
+                    <span class="kpi-card-sub">Top: MS Dhoni (5,439 runs)</span>
                 </div>
             </div>
             <div class="preauction-kpi-card" onclick="switchCategoryTab('capped')" style="cursor: pointer; transition: transform 0.2s;" title="Click to view Capped Players">
@@ -170,7 +210,7 @@
                 <div class="kpi-card-info">
                     <span class="kpi-card-label">Capped Stars</span>
                     <strong class="kpi-card-value">{{ category_counts.capped }} Players</strong>
-                    <span class="kpi-card-sub">International Icons & Top Tier</span>
+                    <span class="kpi-card-sub">Bat: {{ category_counts.capped_batters }} • Bowl: {{ category_counts.capped_bowlers }}</span>
                 </div>
             </div>
             <div class="preauction-kpi-card" onclick="switchCategoryTab('uncapped')" style="cursor: pointer; transition: transform 0.2s;" title="Click to view Uncapped Players">
@@ -178,18 +218,19 @@
                 <div class="kpi-card-info">
                     <span class="kpi-card-label">Uncapped Talents</span>
                     <strong class="kpi-card-value">{{ category_counts.uncapped }} Players</strong>
-                    <span class="kpi-card-sub">Emerging Domestic Guns</span>
+                    <span class="kpi-card-sub">Bat: {{ category_counts.uncapped_batters }} • Bowl: {{ category_counts.uncapped_bowlers }}</span>
                 </div>
             </div>
         </div>
 
-        <!-- Category Filter Tabs Bar -->
-        <div class="cap-tabs-container" style="flex-wrap: wrap;">
+        <!-- Category Filter Tabs Bar with Capped & Uncapped Separations -->
+        <div class="cap-tabs-container" style="flex-wrap: wrap; gap: 0.4rem;">
+            <!-- Primary Pools -->
             <button type="button" class="cap-tab-btn active-cap-tab" id="tab-btn-batters" onclick="switchCategoryTab('batters')">
-                🏏 Batters ({{ category_counts.batters }})
+                🏏 Batters ({{ category_counts.batters }}) [Runs ↓]
             </button>
             <button type="button" class="cap-tab-btn" id="tab-btn-bowlers" onclick="switchCategoryTab('bowlers')">
-                ⚡ Bowlers ({{ category_counts.bowlers }})
+                ⚡ Bowlers ({{ category_counts.bowlers }}) [Wickets ↓]
             </button>
             <button type="button" class="cap-tab-btn" id="tab-btn-allrounders" onclick="switchCategoryTab('allrounders')">
                 🔥 All-rounders ({{ category_counts.allrounders }})
@@ -197,25 +238,61 @@
             <button type="button" class="cap-tab-btn" id="tab-btn-wicketkeepers" onclick="switchCategoryTab('wicketkeepers')">
                 🧤 Wicketkeepers ({{ category_counts.wicketkeepers }})
             </button>
+
+            <!-- Capped Separated Roles -->
             <button type="button" class="cap-tab-btn" id="tab-btn-capped" onclick="switchCategoryTab('capped')">
-                🧢 Capped Players ({{ category_counts.capped }})
+                🧢 All Capped ({{ category_counts.capped }})
             </button>
+            <button type="button" class="cap-tab-btn" id="tab-btn-capped_batters" onclick="switchCategoryTab('capped_batters')">
+                🧢🏏 Capped Batters ({{ category_counts.capped_batters }}) [Runs ↓]
+            </button>
+            <button type="button" class="cap-tab-btn" id="tab-btn-capped_bowlers" onclick="switchCategoryTab('capped_bowlers')">
+                🧢⚡ Capped Bowlers ({{ category_counts.capped_bowlers }}) [Wickets ↓]
+            </button>
+            <button type="button" class="cap-tab-btn" id="tab-btn-capped_allrounders" onclick="switchCategoryTab('capped_allrounders')">
+                🧢🔥 Capped All-rounders ({{ category_counts.capped_allrounders }})
+            </button>
+
+            <!-- Uncapped Separated Roles -->
             <button type="button" class="cap-tab-btn" id="tab-btn-uncapped" onclick="switchCategoryTab('uncapped')">
-                🌟 Uncapped Players ({{ category_counts.uncapped }})
+                🌟 All Uncapped ({{ category_counts.uncapped }})
             </button>
+            <button type="button" class="cap-tab-btn" id="tab-btn-uncapped_batters" onclick="switchCategoryTab('uncapped_batters')">
+                🌟🏏 Uncapped Batters ({{ category_counts.uncapped_batters }}) [Runs ↓]
+            </button>
+            <button type="button" class="cap-tab-btn" id="tab-btn-uncapped_bowlers" onclick="switchCategoryTab('uncapped_bowlers')">
+                🌟⚡ Uncapped Bowlers ({{ category_counts.uncapped_bowlers }}) [Wickets ↓]
+            </button>
+            <button type="button" class="cap-tab-btn" id="tab-btn-uncapped_allrounders" onclick="switchCategoryTab('uncapped_allrounders')">
+                🌟🔥 Uncapped All-rounders ({{ category_counts.uncapped_allrounders }})
+            </button>
+
             <button type="button" class="cap-tab-btn" id="tab-btn-all" onclick="switchCategoryTab('all')">
                 👥 All Players ({{ category_counts.total }})
             </button>
         </div>
 
         <!-- Render each separated category table -->
-        {{ render_pool_table('batters', batters, '🏏 Premier Batters Ranked by Base Price') }}
-        {{ render_pool_table('bowlers', bowlers, '⚡ Premier Bowlers Ranked by Base Price') }}
-        {{ render_pool_table('allrounders', allrounders, '🔥 Dual-Threat All-rounders Ranked by Base Price') }}
-        {{ render_pool_table('wicketkeepers', wicketkeepers, '🧤 Elite Wicketkeeper-Batters Ranked by Base Price') }}
-        {{ render_pool_table('capped', capped_players, '🧢 Capped Marquee Stars (₹2.00 Cr - ₹75L)') }}
-        {{ render_pool_table('uncapped', uncapped_players, '🌟 Emerging Uncapped Talents (₹50L - ₹20L)') }}
-        {{ render_pool_table('all', players, '👥 Complete Registered Player Pool') }}
+        {{ render_pool_table('batters', batters, '🏏 Premier Batters Ranked by Career Runs (Orange Cap: Highest to Lowest)') }}
+        {{ render_pool_table('bowlers', bowlers, '⚡ Premier Bowlers Ranked by Total Wickets (Purple Cap: Highest to Lowest)') }}
+        {{ render_pool_table('allrounders', allrounders, '🔥 Dual-Threat All-rounders Ranked by Runs & Performance (Highest to Lowest)') }}
+        {{ render_pool_table('wicketkeepers', wicketkeepers, '🧤 Elite Wicketkeeper-Batters Ranked by Runs (Highest to Lowest)') }}
+
+        <!-- Capped Separated Tables -->
+        {{ render_pool_table('capped', capped_players, '🧢 Capped Marquee Stars (Base Price & Valuations)') }}
+        {{ render_pool_table('capped_batters', capped_batters, '🧢🏏 Capped Batters Ranked by Career Runs (Highest to Lowest)') }}
+        {{ render_pool_table('capped_bowlers', capped_bowlers, '🧢⚡ Capped Bowlers Ranked by Total Wickets (Highest to Lowest)') }}
+        {{ render_pool_table('capped_allrounders', capped_allrounders, '🧢🔥 Capped All-rounders Ranked by Runs & Performance (Highest to Lowest)') }}
+        {{ render_pool_table('capped_wicketkeepers', capped_wicketkeepers, '🧢🧤 Capped Wicketkeepers Ranked by Runs (Highest to Lowest)') }}
+
+        <!-- Uncapped Separated Tables -->
+        {{ render_pool_table('uncapped', uncapped_players, '🌟 Emerging Uncapped Talents (Base Price & Valuations)') }}
+        {{ render_pool_table('uncapped_batters', uncapped_batters, '🌟🏏 Uncapped Batters Ranked by Career Runs (Highest to Lowest)') }}
+        {{ render_pool_table('uncapped_bowlers', uncapped_bowlers, '🌟⚡ Uncapped Bowlers Ranked by Total Wickets (Highest to Lowest)') }}
+        {{ render_pool_table('uncapped_allrounders', uncapped_allrounders, '🌟🔥 Uncapped All-rounders Ranked by Runs & Performance (Highest to Lowest)') }}
+        {{ render_pool_table('uncapped_wicketkeepers', uncapped_wicketkeepers, '🌟🧤 Uncapped Wicketkeepers Ranked by Runs (Highest to Lowest)') }}
+
+        {{ render_pool_table('all', players, '👥 Complete Registered Player Pool (255 Players)') }}
     </section>
 
 
@@ -542,7 +619,15 @@
 <template id="tmpl-allrounders-data">{{ allrounders_json|safe }}</template>
 <template id="tmpl-wicketkeepers-data">{{ wicketkeepers_json|safe }}</template>
 <template id="tmpl-capped-data">{{ capped_players_json|safe }}</template>
+<template id="tmpl-capped_batters-data">{{ capped_batters_json|safe }}</template>
+<template id="tmpl-capped_bowlers-data">{{ capped_bowlers_json|safe }}</template>
+<template id="tmpl-capped_allrounders-data">{{ capped_allrounders_json|safe }}</template>
+<template id="tmpl-capped_wicketkeepers-data">{{ capped_wicketkeepers_json|safe }}</template>
 <template id="tmpl-uncapped-data">{{ uncapped_players_json|safe }}</template>
+<template id="tmpl-uncapped_batters-data">{{ uncapped_batters_json|safe }}</template>
+<template id="tmpl-uncapped_bowlers-data">{{ uncapped_bowlers_json|safe }}</template>
+<template id="tmpl-uncapped_allrounders-data">{{ uncapped_allrounders_json|safe }}</template>
+<template id="tmpl-uncapped_wicketkeepers-data">{{ uncapped_wicketkeepers_json|safe }}</template>
 <template id="tmpl-all-data">{{ players_json|safe }}</template>
 
 <script>
@@ -570,9 +655,14 @@ async function switchAuctionMode(mode) {
     }
 }
 
-// Tab Switcher between Batters, Bowlers, Allrounders, Wicketkeepers, Capped & Uncapped
+// Tab Switcher between All Pools, Capped (Batters, Bowlers, Allrounders) and Uncapped (Batters, Bowlers, Allrounders)
 function switchCategoryTab(cat) {
-    const tabs = ['batters', 'bowlers', 'allrounders', 'wicketkeepers', 'capped', 'uncapped', 'all'];
+    const tabs = [
+        'batters', 'bowlers', 'allrounders', 'wicketkeepers',
+        'capped', 'capped_batters', 'capped_bowlers', 'capped_allrounders', 'capped_wicketkeepers',
+        'uncapped', 'uncapped_batters', 'uncapped_bowlers', 'uncapped_allrounders', 'uncapped_wicketkeepers',
+        'all'
+    ];
     tabs.forEach(t => {
         const btn = document.getElementById(`tab-btn-${t}`);
         const sec = document.getElementById(`section-${t}-players`);

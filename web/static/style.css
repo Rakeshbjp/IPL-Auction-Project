@@ -1779,6 +1779,57 @@ body.broadcast-theme {
     box-shadow: 0 -4px 15px rgba(245, 158, 11, 0.15);
 }
 
+/* Sub-Filter Role Navigation Pills (Capped & Uncapped Separations) */
+.sub-filter-pills-bar {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+    background: rgba(13, 21, 39, 0.85);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 8px;
+    padding: 0.6rem 0.85rem;
+    margin-bottom: 0.85rem;
+}
+
+.sub-filter-label {
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: var(--ipl-gold);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-right: 0.25rem;
+}
+
+.sub-pill-btn {
+    padding: 0.35rem 0.75rem;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    cursor: pointer;
+    background: rgba(255, 255, 255, 0.04);
+    color: var(--text-muted);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    transition: all 0.2s ease;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+}
+
+.sub-pill-btn:hover {
+    background: rgba(245, 158, 11, 0.15);
+    color: #ffffff;
+    border-color: rgba(245, 158, 11, 0.4);
+}
+
+.sub-pill-btn.active {
+    background: linear-gradient(135deg, rgba(245, 158, 11, 0.3), rgba(217, 119, 6, 0.4));
+    color: #ffffff;
+    border-color: var(--ipl-gold);
+    box-shadow: 0 0 10px rgba(245, 158, 11, 0.25);
+}
+
 /* Sorting Techniques Action Bar */
 .sort-technique-bar {
     display: flex;

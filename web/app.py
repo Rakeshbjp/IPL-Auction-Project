@@ -98,13 +98,28 @@ def dashboard():
     total_retention_spend = sum(t.get("retention_spend", 0.0) for t in teams)
     total_rtm_cards_available = sum(t.get("rtm_cards", 0) for t in teams)
 
-    # Separate players by role and category
-    batters = [p for p in players if p.get("role") == "Batsman"]
-    bowlers = [p for p in players if p.get("role") == "Bowler"]
-    allrounders = [p for p in players if p.get("role") == "Allrounder"]
-    wicketkeepers = [p for p in players if p.get("role") == "Wicketkeeper"]
-    capped_players = [p for p in players if p.get("is_capped", 1) == 1]
-    uncapped_players = [p for p in players if p.get("is_capped", 1) == 0]
+    # Separate players by role and category with official ranking sorts
+    from dsa.merge_sort import merge_sort
+
+    # Base groups sorted appropriately: Batters by Runs (desc), Bowlers by Wickets (desc)
+    batters = merge_sort([p for p in players if p.get("role") == "Batsman"], key="runs", descending=True)
+    bowlers = merge_sort([p for p in players if p.get("role") == "Bowler"], key="wickets", descending=True)
+    allrounders = merge_sort([p for p in players if p.get("role") == "Allrounder"], key="runs", descending=True)
+    wicketkeepers = merge_sort([p for p in players if p.get("role") == "Wicketkeeper"], key="runs", descending=True)
+
+    # Capped players and their separated role pools
+    capped_players = merge_sort([p for p in players if p.get("is_capped", 1) == 1], key="base_price", descending=True)
+    capped_batters = merge_sort([p for p in capped_players if p.get("role") == "Batsman"], key="runs", descending=True)
+    capped_bowlers = merge_sort([p for p in capped_players if p.get("role") == "Bowler"], key="wickets", descending=True)
+    capped_allrounders = merge_sort([p for p in capped_players if p.get("role") == "Allrounder"], key="runs", descending=True)
+    capped_wicketkeepers = merge_sort([p for p in capped_players if p.get("role") == "Wicketkeeper"], key="runs", descending=True)
+
+    # Uncapped players and their separated role pools
+    uncapped_players = merge_sort([p for p in players if p.get("is_capped", 1) == 0], key="base_price", descending=True)
+    uncapped_batters = merge_sort([p for p in uncapped_players if p.get("role") == "Batsman"], key="runs", descending=True)
+    uncapped_bowlers = merge_sort([p for p in uncapped_players if p.get("role") == "Bowler"], key="wickets", descending=True)
+    uncapped_allrounders = merge_sort([p for p in uncapped_players if p.get("role") == "Allrounder"], key="runs", descending=True)
+    uncapped_wicketkeepers = merge_sort([p for p in uncapped_players if p.get("role") == "Wicketkeeper"], key="runs", descending=True)
 
     # Base price tiers count
     tiers = {
@@ -124,7 +139,15 @@ def dashboard():
         "allrounders": len(allrounders),
         "wicketkeepers": len(wicketkeepers),
         "capped": len(capped_players),
+        "capped_batters": len(capped_batters),
+        "capped_bowlers": len(capped_bowlers),
+        "capped_allrounders": len(capped_allrounders),
+        "capped_wicketkeepers": len(capped_wicketkeepers),
         "uncapped": len(uncapped_players),
+        "uncapped_batters": len(uncapped_batters),
+        "uncapped_bowlers": len(uncapped_bowlers),
+        "uncapped_allrounders": len(uncapped_allrounders),
+        "uncapped_wicketkeepers": len(uncapped_wicketkeepers),
     }
 
     db_engine = "Supabase PostgreSQL" if (DB_MODE == "supabase" and is_supabase_configured()) else "SQLite3 (Relational)"
@@ -138,7 +161,15 @@ def dashboard():
         allrounders=allrounders,
         wicketkeepers=wicketkeepers,
         capped_players=capped_players,
+        capped_batters=capped_batters,
+        capped_bowlers=capped_bowlers,
+        capped_allrounders=capped_allrounders,
+        capped_wicketkeepers=capped_wicketkeepers,
         uncapped_players=uncapped_players,
+        uncapped_batters=uncapped_batters,
+        uncapped_bowlers=uncapped_bowlers,
+        uncapped_allrounders=uncapped_allrounders,
+        uncapped_wicketkeepers=uncapped_wicketkeepers,
         category_counts=category_counts,
         auction_sets=auction_sets,
         auction_stats=auction_stats,
@@ -157,7 +188,15 @@ def dashboard():
         allrounders_json=json.dumps(allrounders),
         wicketkeepers_json=json.dumps(wicketkeepers),
         capped_players_json=json.dumps(capped_players),
+        capped_batters_json=json.dumps(capped_batters),
+        capped_bowlers_json=json.dumps(capped_bowlers),
+        capped_allrounders_json=json.dumps(capped_allrounders),
+        capped_wicketkeepers_json=json.dumps(capped_wicketkeepers),
         uncapped_players_json=json.dumps(uncapped_players),
+        uncapped_batters_json=json.dumps(uncapped_batters),
+        uncapped_bowlers_json=json.dumps(uncapped_bowlers),
+        uncapped_allrounders_json=json.dumps(uncapped_allrounders),
+        uncapped_wicketkeepers_json=json.dumps(uncapped_wicketkeepers),
     )
 
 
@@ -196,6 +235,12 @@ def players_page():
         "bowlers": len([p for p in all_players if p.get("role") == "Bowler"]),
         "allrounders": len([p for p in all_players if p.get("role") == "Allrounder"]),
         "wicketkeepers": len([p for p in all_players if p.get("role") == "Wicketkeeper"]),
+        "capped_batters": len([p for p in all_players if p.get("is_capped", 1) == 1 and p.get("role") == "Batsman"]),
+        "capped_bowlers": len([p for p in all_players if p.get("is_capped", 1) == 1 and p.get("role") == "Bowler"]),
+        "capped_allrounders": len([p for p in all_players if p.get("is_capped", 1) == 1 and p.get("role") == "Allrounder"]),
+        "uncapped_batters": len([p for p in all_players if p.get("is_capped", 1) == 0 and p.get("role") == "Batsman"]),
+        "uncapped_bowlers": len([p for p in all_players if p.get("is_capped", 1) == 0 and p.get("role") == "Bowler"]),
+        "uncapped_allrounders": len([p for p in all_players if p.get("is_capped", 1) == 0 and p.get("role") == "Allrounder"]),
     }
 
     # Sorting options using authentic IPL terms
@@ -223,6 +268,17 @@ def players_page():
     elif sort_filter == "strike_rate":
         from dsa.quick_sort import quick_sort
         players = quick_sort(players, key="strike_rate", descending=True)
+    else:
+        # Default smart sort: Batters by runs (desc), Bowlers by wickets (desc)
+        from dsa.merge_sort import merge_sort
+        if role_filter == "Batsman":
+            players = merge_sort(players, key="runs", descending=True)
+        elif role_filter == "Bowler":
+            players = merge_sort(players, key="wickets", descending=True)
+        elif role_filter in ("Allrounder", "Wicketkeeper"):
+            players = merge_sort(players, key="runs", descending=True)
+        else:
+            players = merge_sort(players, key="base_price", descending=True)
 
     auction_sets = get_auction_sets()
 

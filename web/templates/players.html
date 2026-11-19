@@ -61,6 +61,31 @@
         </div>
     </div>
 
+    <!-- Quick Shortcuts for Capped & Uncapped Role Rankings -->
+    <div class="sub-filter-pills-bar mt-2">
+        <span class="sub-filter-label">Quick Role Rankings:</span>
+        <a href="/players?cap=capped&role=Batsman&sort=runs" 
+           class="sub-pill-btn {% if active_cap == 'capped' and active_role == 'Batsman' %}active{% endif %}">
+            🧢🏏 Capped Batters (Highest Runs ↓)
+        </a>
+        <a href="/players?cap=capped&role=Bowler&sort=wickets" 
+           class="sub-pill-btn {% if active_cap == 'capped' and active_role == 'Bowler' %}active{% endif %}">
+            🧢⚡ Capped Bowlers (Top Wickets ↓)
+        </a>
+        <a href="/players?cap=uncapped&role=Batsman&sort=runs" 
+           class="sub-pill-btn {% if active_cap == 'uncapped' and active_role == 'Batsman' %}active{% endif %}">
+            🌟🏏 Uncapped Batters (Highest Runs ↓)
+        </a>
+        <a href="/players?cap=uncapped&role=Bowler&sort=wickets" 
+           class="sub-pill-btn {% if active_cap == 'uncapped' and active_role == 'Bowler' %}active{% endif %}">
+            🌟⚡ Uncapped Bowlers (Top Wickets ↓)
+        </a>
+        <a href="/players?cap=uncapped&role=Allrounder&sort=runs" 
+           class="sub-pill-btn {% if active_cap == 'uncapped' and active_role == 'Allrounder' %}active{% endif %}">
+            🌟🔥 Uncapped All-rounders
+        </a>
+    </div>
+
     <!-- Search Form -->
     <form action="/players" method="GET" class="search-form mt-2">
         {% if active_cap %}<input type="hidden" name="cap" value="{{ active_cap }}">{% endif %}
@@ -82,7 +107,15 @@
     <!-- 2 & 5) REPLACING TECHNICAL TERMS WITH AUTHENTIC IPL AUCTION TERMS -->
     <div class="sort-technique-bar mt-3">
         <div class="sort-technique-buttons">
-            <span class="sort-label">Auction Rankings:</span>
+            <span class="sort-label">Rankings:</span>
+            <a href="/players?sort=runs{% if active_cap %}&cap={{ active_cap }}{% endif %}{% if active_role %}&role={{ active_role }}{% endif %}" 
+               class="btn-sort-technique {% if active_sort == 'runs' or (active_role == 'Batsman' and not active_sort) %}active-sort{% endif %}">
+                🏏 Most Career Runs (Orange Cap: Highest to Lowest)
+            </a>
+            <a href="/players?sort=wickets{% if active_cap %}&cap={{ active_cap }}{% endif %}{% if active_role %}&role={{ active_role }}{% endif %}" 
+               class="btn-sort-technique {% if active_sort == 'wickets' or (active_role == 'Bowler' and not active_sort) %}active-sort{% endif %}">
+                ⚡ Top Wickets (Purple Cap: Highest to Lowest)
+            </a>
             <a href="/players?sort=mergesort_price{% if active_cap %}&cap={{ active_cap }}{% endif %}{% if active_role %}&role={{ active_role }}{% endif %}" 
                class="btn-sort-technique {% if active_sort == 'mergesort_price' or active_sort == 'price_desc' %}active-sort{% endif %}">
                 💰 Highest Base Price (Top Tier)
@@ -90,14 +123,6 @@
             <a href="/players?sort=mergesort_price_asc{% if active_cap %}&cap={{ active_cap }}{% endif %}{% if active_role %}&role={{ active_role }}{% endif %}" 
                class="btn-sort-technique {% if active_sort == 'mergesort_price_asc' or active_sort == 'price_asc' %}active-sort{% endif %}">
                 🏷️ Lowest Base Price (Budget Picks)
-            </a>
-            <a href="/players?sort=runs{% if active_cap %}&cap={{ active_cap }}{% endif %}{% if active_role %}&role={{ active_role }}{% endif %}" 
-               class="btn-sort-technique {% if active_sort == 'runs' %}active-sort{% endif %}">
-                🏏 Most Career Runs (Orange Cap)
-            </a>
-            <a href="/players?sort=wickets{% if active_cap %}&cap={{ active_cap }}{% endif %}{% if active_role %}&role={{ active_role }}{% endif %}" 
-               class="btn-sort-technique {% if active_sort == 'wickets' %}active-sort{% endif %}">
-                ⚡ Top Wickets (Purple Cap)
             </a>
             <a href="/players?sort=avg{% if active_cap %}&cap={{ active_cap }}{% endif %}{% if active_role %}&role={{ active_role }}{% endif %}" 
                class="btn-sort-technique {% if active_sort == 'avg' %}active-sort{% endif %}">
